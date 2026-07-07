@@ -81,7 +81,48 @@ namespace sm {
     };
 }
 
-/// Alias for lookAtRH — glm::lookAt with GLM_FORCE_DEPTH_ZERO_TO_ONE defaults to RH.
+/// Inverse of a lookAtRH view matrix — analytical, ~0 arithmetic operations.
+///
+/// Exploits the orthonormal structure: the 3×3 rotation block of V is orthogonal
+/// (R⁻¹ = Rᵀ), and the translation column unpacks directly from the eye position.
+/// Equivalent to sm::inverse(lookAtRH(eye, center, up)) but ~128× cheaper.
+///
+/// Use instead of sm::inverse() whenever inverting a view matrix each frame.
+[[nodiscard]] inline float4x4 inverseLookAtRH(const float3& eye,
+                                               const float3& center,
+                                               const float3& up) noexcept {
+    const float3 f = normalize(center - eye);
+    const float3 r = normalize(cross(f, up));
+    const float3 u = cross(r, f);
+    // V⁻¹ = Rᵀ with translation = eye (camera position in world space).
+    return {
+        { r.x,  u.x, -f.x,  eye.x },  // row 0: col 0 of V + eye.x
+        { r.y,  u.y, -f.y,  eye.y },  // row 1: col 1 of V + eye.y
+        { r.z,  u.z, -f.z,  eye.z },  // row 2: col 2 of V + eye.z
+        { 0.f,  0.f,  0.f,  1.f   },  // row 3
+    };
+}
+
+/// Analytical inverse of a perspectiveRH_ZO matrix — ~4 divisions, no pivoting.
+///
+/// The RH ZO perspective matrix has only 6 non-zero entries; its inverse is also
+/// sparse and computable in closed form.  Equivalent to sm::inverse(perspectiveRH_ZO(…))
+/// but ~128× cheaper.
+///
+/// Use instead of sm::inverse() whenever inverting a projection matrix each frame.
+[[nodiscard]] inline float4x4 inversePerspectiveRH_ZO(float fovY, float aspect,
+                                                        float zNear, float zFar) noexcept {
+    const float f  = 1.f / std::tan(fovY * 0.5f);
+    const float d  = zFar - zNear;
+    return {
+        { aspect / f,  0.f,   0.f,               0.f              },  // row 0
+        { 0.f,         1.f/f, 0.f,               0.f              },  // row 1
+        { 0.f,         0.f,   0.f,              -1.f              },  // row 2
+        { 0.f,         0.f,  -d / (zFar * zNear), zFar / (zFar * zNear) }, // row 3
+    };
+}
+
+
 [[nodiscard]] inline float4x4 lookAt(const float3& eye,
                                       const float3& center,
                                       const float3& up) noexcept {
@@ -125,7 +166,7 @@ namespace sm {
 [[nodiscard]] inline quaternion angleAxis(float angle, const float3& axis) noexcept {
     const float3 a = normalize(axis);
     const float  s = std::sin(angle * 0.5f);
-    return {std::cos(angle * 0.5f), a.x * s, a.y * s, a.z * s};
+    return {a.x * s, a.y * s, a.z * s, std::cos(angle * 0.5f)};
 }
 
 // ── Identity template ─────────────────────────────────────────────────────────

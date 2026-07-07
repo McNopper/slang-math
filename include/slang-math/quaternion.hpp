@@ -14,12 +14,12 @@ struct quaternion {
     float w{1.f};
 
     constexpr quaternion() noexcept = default;
-    /// Component constructor: (w, x, y, z) — same argument order as glm::quat(w,x,y,z).
-    constexpr quaternion(float w, float x, float y, float z) noexcept
+    /// Component constructor: (x, y, z, w) — matches member declaration order and Slang float4 style.
+    constexpr quaternion(float x, float y, float z, float w) noexcept
         : x(x), y(y), z(z), w(w) {}
 
     [[nodiscard]] static constexpr quaternion identity() noexcept {
-        return {1.f, 0.f, 0.f, 0.f};
+        return {0.f, 0.f, 0.f, 1.f};
     }
 
     [[nodiscard]] constexpr bool operator==(const quaternion&) const noexcept = default;

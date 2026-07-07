@@ -56,14 +56,17 @@ pack_matrix(row_major)` directive), the CPU and GPU byte layout are identical.  
 | `sm::normalize(v)` | Unit vector |
 | `sm::min/max(a, b)` | Component-wise min/max |
 | `sm::clamp(v, lo, hi)` | Component-wise clamp |
-| `sm::mix(a, b, t)` | Linear interpolation |
+| `sm::lerp(a, b, t)` | Linear interpolation (GLSL alias `sm::mix` is deprecated) |
 | `sm::reflect(i, n)` | Reflection about normal |
 | `sm::radians/degrees(x)` | Angle conversion |
 | `sm::pi<float>()` | π constant |
 | `sm::transpose(m)` | Matrix transpose |
 | `sm::inverse(m)` | Matrix inverse (Gauss-Jordan for 4×4, Cramer for 3×3) |
 | `sm::inverseTranspose(m)` | `transpose(inverse(m))` — normal matrix |
-| `sm::mat3(float4x4)` | Upper-left 3×3 extraction |
+| `sm::toFloat3x3(float4x4)` | Upper-left 3×3 extraction (GLM alias `sm::mat3` is deprecated) |
+| `sm::abs(v)` | Component-wise absolute value |
+| `sm::smoothstep(e0, e1, x)` | Hermite smooth-step |
+| `sm::distance(a, b)` | Euclidean distance between two float3 points |
 | `sm::value_ptr(v/m)` | `const float*` to first element (buffer upload helper) |
 
 ## Transform builders
@@ -79,7 +82,7 @@ All builders assume a right-handed coordinate system and Vulkan depth range [0, 
 | `sm::translate(m, v)` | M × T(v) |
 | `sm::rotate(m, angle, axis)` | M × R(angle, axis) — Rodrigues formula |
 | `sm::scale(m, v)` | M × S(v) |
-| `sm::mat4_cast(q)` | Quaternion → rotation matrix |
+| `sm::toMatrix(q)` | Quaternion → rotation matrix (GLM alias `sm::mat4_cast` also available) |
 | `sm::angleAxis(angle, axis)` | Build rotation quaternion |
 | `sm::identity<T>()` | Identity value for any matrix/quaternion type |
 
