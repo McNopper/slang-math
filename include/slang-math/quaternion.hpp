@@ -7,7 +7,7 @@ namespace sm {
 
 /// Unit quaternion for 3D rotations.
 ///
-/// Storage order: x, y, z, w — identical to glm::quat.
+/// Storage order: x, y, z, w.
 /// Identity quaternion: w = 1, x = y = z = 0.
 struct quaternion {
     float x{}, y{}, z{};
@@ -26,7 +26,6 @@ struct quaternion {
 };
 
 /// Rotate a 3D vector by a unit quaternion: q * v * q⁻¹.
-/// Equivalent to glm::operator*(quat, vec3).
 [[nodiscard]] inline constexpr float3 operator*(const quaternion& q, const float3& v) noexcept {
     // Rodrigues' formula: v' = v + 2w(qv × v) + 2(qv × (qv × v))
     const float3 qv{q.x, q.y, q.z};
@@ -43,7 +42,7 @@ struct quaternion {
 }
 
 /// Convert a unit quaternion to a 4×4 row-major rotation matrix.
-/// Equivalent to glm::mat4_cast(q) — same abstract rotation, row-major storage.
+/// Convert to a 4×4 rotation matrix — same abstract rotation, row-major storage.
 [[nodiscard]] inline float4x4 toMatrix(const quaternion& q) noexcept {
     const float x2 = q.x*q.x, y2 = q.y*q.y, z2 = q.z*q.z;
     const float xy = q.x*q.y, xz = q.x*q.z, yz = q.y*q.z;

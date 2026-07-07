@@ -5,7 +5,7 @@
 namespace sm {
 
 /// Two-component unsigned integer vector — mirrors Slang/HLSL `uint2`.
-/// Memory layout: x, y (8 bytes) — matches glm::uvec2.
+/// Memory layout: x, y (8 bytes).
 struct uint2 {
     uint32_t x{}, y{};
 

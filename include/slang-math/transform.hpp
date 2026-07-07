@@ -21,7 +21,7 @@ namespace sm {
 //   - Vulkan depth range [0, 1]
 //   - `M * v` applies the transform (column-vector form, Slang: mul(M, v))
 
-/// Translation: `translate(m, v)` = M * T(v) — equivalent to glm::translate(m, v).
+/// Translation: `translate(m, v)` = M * T(v).
 [[nodiscard]] inline float4x4 translate(const float4x4& m, const float3& v) noexcept {
     // Only the last column (w-component of each row) changes: result[i][3] = dot(row i, v).
     float4x4 result = m;
@@ -32,7 +32,7 @@ namespace sm {
     return result;
 }
 
-/// Non-uniform scale: `scale(m, v)` = M * S(v) — equivalent to glm::scale(m, v).
+/// Non-uniform scale: `scale(m, v)` = M * S(v).
 [[nodiscard]] inline float4x4 scale(const float4x4& m, const float3& v) noexcept {
     return {
         {m.rows[0].x*v.x, m.rows[0].y*v.y, m.rows[0].z*v.z, m.rows[0].w},
@@ -43,7 +43,6 @@ namespace sm {
 }
 
 /// Rotation by `angle` radians about `axis`: `rotate(m, angle, axis)` = M * R.
-/// Equivalent to glm::rotate(m, angle, axis).
 [[nodiscard]] inline float4x4 rotate(const float4x4& m, float angle, const float3& axis) noexcept {
     const float c = std::cos(angle);
     const float s = std::sin(angle);
@@ -62,7 +61,7 @@ namespace sm {
 
 // ── Camera projection ─────────────────────────────────────────────────────────
 
-/// Right-handed look-at view matrix: equivalent to glm::lookAtRH(eye, center, up).
+/// Right-handed look-at view matrix.
 ///
 /// Rows 0-2 contain the orthonormal camera basis vectors (right, up, -forward) plus
 /// their translation components.  Upload directly — no transpose.
@@ -130,7 +129,6 @@ namespace sm {
 }
 
 /// Right-handed perspective projection with [0, 1] depth range (Vulkan).
-/// Equivalent to glm::perspectiveRH_ZO(fovY, aspect, zNear, zFar).
 ///
 /// fovY    — vertical field of view in radians
 /// aspect  — width / height
@@ -148,7 +146,7 @@ namespace sm {
     };
 }
 
-/// Alias for perspectiveRH_ZO — glm::perspective with GLM_FORCE_DEPTH_ZERO_TO_ONE.
+/// Alias for perspectiveRH_ZO.
 [[nodiscard]] inline float4x4 perspective(float fovY, float aspect,
                                            float zNear, float zFar) noexcept {
     return perspectiveRH_ZO(fovY, aspect, zNear, zFar);
@@ -156,13 +154,12 @@ namespace sm {
 
 // ── Quaternion helpers ────────────────────────────────────────────────────────
 
-/// Convert quaternion to 4×4 rotation matrix: equivalent to glm::mat4_cast(q).
+/// Convert quaternion to 4×4 rotation matrix.
 [[nodiscard]] inline float4x4 mat4_cast(const quaternion& q) noexcept {
     return toMatrix(q);
 }
 
 /// Build a quaternion representing a rotation of `angle` radians about `axis`.
-/// Equivalent to glm::angleAxis(angle, axis).
 [[nodiscard]] inline quaternion angleAxis(float angle, const float3& axis) noexcept {
     const float3 a = normalize(axis);
     const float  s = std::sin(angle * 0.5f);
@@ -171,7 +168,7 @@ namespace sm {
 
 // ── Identity template ─────────────────────────────────────────────────────────
 
-/// identity<T>() — equivalent to glm::identity<T>().
+/// identity<T>() — returns the identity value for T.
 template<typename T> [[nodiscard]] inline T identity() noexcept;
 template<> [[nodiscard]] inline float4x4   identity<float4x4>()   noexcept { return float4x4::identity(); }
 template<> [[nodiscard]] inline float3x3   identity<float3x3>()   noexcept { return float3x3::identity(); }

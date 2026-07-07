@@ -5,7 +5,7 @@
 namespace sm {
 
 /// Four-component unsigned integer vector — mirrors Slang/HLSL `uint4`.
-/// Memory layout: x, y, z, w (16 bytes) — matches glm::uvec4.
+/// Memory layout: x, y, z, w (16 bytes).
 struct uint4 {
     uint32_t x{}, y{}, z{}, w{};
 

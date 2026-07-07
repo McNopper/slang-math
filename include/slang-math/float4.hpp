@@ -6,7 +6,7 @@ namespace sm {
 
 /// Four-component float vector — mirrors Slang/HLSL `float4`.
 ///
-/// Memory layout: x, y, z, w (16 bytes, no padding) — matches glm::vec4.
+/// Memory layout: x, y, z, w (16 bytes, no padding).
 ///
 /// The r/g/b/a aliases map to x/y/z/w respectively.
 struct float4 {
@@ -21,7 +21,7 @@ struct float4 {
     constexpr float4(const float2& xy, float z, float w) noexcept : x(xy.x), y(xy.y), z(z), w(w) {}
     constexpr explicit float4(float s) noexcept : x(s), y(s), z(s), w(s) {}
 
-    /// Truncate to xyz (same as glm::vec3(vec4)).
+    /// Truncate to xyz.
     [[nodiscard]] constexpr explicit operator float3() const noexcept { return {x, y, z}; }
 
     [[nodiscard]] constexpr float& operator[](int i) noexcept { return (&x)[i]; }

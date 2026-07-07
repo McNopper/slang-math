@@ -3,7 +3,7 @@
 namespace sm {
 
 /// Two-component float vector — mirrors Slang/HLSL `float2`.
-/// Memory layout: x, y (8 bytes, no padding) — matches glm::vec2.
+/// Memory layout: x, y (8 bytes, no padding).
 struct float2 {
     float x{}, y{};
 

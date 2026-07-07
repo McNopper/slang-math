@@ -14,7 +14,7 @@ namespace sm {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-/// pi<float>() / pi<double>() — equivalent to glm::pi<T>().
+/// pi<float>() / pi<double>() — the mathematical constant pi.
 template<typename T> [[nodiscard]] constexpr T pi() noexcept;
 template<> [[nodiscard]] inline constexpr float  pi<float>()  noexcept { return std::numbers::pi_v<float>; }
 template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return std::numbers::pi_v<double>; }
@@ -143,7 +143,7 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
 // ── Smooth-step ───────────────────────────────────────────────────────────────
 
 /// Hermite smooth-step: maps [edge0, edge1] to [0, 1] with zero derivatives at edges.
-/// Equivalent to glm::smoothstep(edge0, edge1, x).
+/// Hermite smoothstep interpolation between edge0 and edge1.
 [[nodiscard]] inline float smoothstep(float edge0, float edge1, float x) noexcept {
     const float t = clamp((x - edge0) / (edge1 - edge0), 0.f, 1.f);
     return t * t * (3.f - 2.f * t);
@@ -263,7 +263,7 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
 }
 
 /// Normal matrix = transpose(inverse(M)).
-/// Equivalent to glm::inverseTranspose(glm::mat3(transform)) — use inverseTranspose(toFloat3x3(t)).
+/// Inverse-transpose of the upper-left 3x3 — use inverseTranspose(toFloat3x3(t)).
 [[nodiscard]] inline float3x3 inverseTranspose(const float3x3& m) noexcept {
     return transpose(inverse(m));
 }

@@ -6,7 +6,7 @@ namespace sm {
 
 /// Three-component float vector — mirrors Slang/HLSL `float3`.
 ///
-/// Memory layout: x, y, z (12 bytes, no padding) — matches glm::vec3.
+/// Memory layout: x, y, z (12 bytes, no padding).
 ///
 /// The r/g/b aliases map to x/y/z respectively (compiler extension, universally
 /// supported by MSVC/GCC/Clang) so colour-math code can use either spelling.
