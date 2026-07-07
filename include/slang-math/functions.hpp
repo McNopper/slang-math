@@ -194,6 +194,14 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
     return result;
 }
 
+/// 3×3 matrix determinant.
+[[nodiscard]] inline constexpr float determinant(const float3x3& m) noexcept {
+    const float a = m[0][0], b = m[0][1], c = m[0][2];
+    const float d = m[1][0], e = m[1][1], f = m[1][2];
+    const float g = m[2][0], h = m[2][1], k = m[2][2];
+    return a*(e*k - f*h) - b*(d*k - f*g) + c*(d*h - e*g);
+}
+
 /// 3×3 matrix inverse via Cramer's rule.  Returns identity on a singular matrix.
 [[nodiscard]] inline float3x3 inverse(const float3x3& m) noexcept {
     // m[row][col]: row 0 = (a,b,c), row 1 = (d,e,f), row 2 = (g,h,k)
