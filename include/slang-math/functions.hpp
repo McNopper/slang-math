@@ -117,6 +117,40 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
     return {std::abs(v.x), std::abs(v.y), std::abs(v.z), std::abs(v.w)};
 }
 
+// ── Component-wise elementary functions ──────────────────────────────────────
+
+[[nodiscard]] inline float3 sqrt(const float3& v) noexcept {
+    return {std::sqrt(v.x), std::sqrt(v.y), std::sqrt(v.z)};
+}
+[[nodiscard]] inline float3 exp(const float3& v) noexcept {
+    return {std::exp(v.x), std::exp(v.y), std::exp(v.z)};
+}
+[[nodiscard]] inline float3 cos(const float3& v) noexcept {
+    return {std::cos(v.x), std::cos(v.y), std::cos(v.z)};
+}
+[[nodiscard]] inline float3 pow(const float3& v, float p) noexcept {
+    return {std::pow(v.x, p), std::pow(v.y, p), std::pow(v.z, p)};
+}
+[[nodiscard]] inline float3 log(const float3& v) noexcept {
+    return {std::log(v.x), std::log(v.y), std::log(v.z)};
+}
+
+// ── Smooth-step ───────────────────────────────────────────────────────────────
+
+/// Hermite smooth-step: maps [edge0, edge1] to [0, 1] with zero derivatives at edges.
+/// Equivalent to glm::smoothstep(edge0, edge1, x).
+[[nodiscard]] inline float smoothstep(float edge0, float edge1, float x) noexcept {
+    const float t = clamp((x - edge0) / (edge1 - edge0), 0.f, 1.f);
+    return t * t * (3.f - 2.f * t);
+}
+
+// ── Mix with vector weight ────────────────────────────────────────────────────
+
+/// Component-wise lerp: mix(a, b, t) = a + t * (b - a).
+[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, const float3& t) noexcept {
+    return {a.x + t.x*(b.x-a.x), a.y + t.y*(b.y-a.y), a.z + t.z*(b.z-a.z)};
+}
+
 // ── Distance ─────────────────────────────────────────────────────────────────
 
 [[nodiscard]] inline float distance(const float3& a, const float3& b) noexcept {
