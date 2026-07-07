@@ -101,12 +101,17 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
     return {clamp(v.x, lo.x, hi.x), clamp(v.y, lo.y, hi.y), clamp(v.z, lo.z, hi.z)};
 }
 
-// ── Mix (linear interpolation) ────────────────────────────────────────────────
+// ── Lerp (linear interpolation) — canonical Slang/HLSL name ─────────────────
 
-[[nodiscard]] inline constexpr float  mix(float  a, float  b, float t) noexcept { return a + t * (b - a); }
-[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, float t) noexcept {
+[[nodiscard]] inline constexpr float  lerp(float  a, float  b, float t) noexcept { return a + t * (b - a); }
+[[nodiscard]] inline constexpr float3 lerp(const float3& a, const float3& b, float t) noexcept {
     return a + t * (b - a);
 }
+
+/// @deprecated Use lerp(). GLSL compatibility alias — will be removed in a future version.
+[[nodiscard]] inline constexpr float  mix(float  a, float  b, float t) noexcept { return lerp(a, b, t); }
+/// @deprecated Use lerp(). GLSL compatibility alias — will be removed in a future version.
+[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, float t) noexcept { return lerp(a, b, t); }
 
 // ── Abs ───────────────────────────────────────────────────────────────────────
 
@@ -144,12 +149,14 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
     return t * t * (3.f - 2.f * t);
 }
 
-// ── Mix with vector weight ────────────────────────────────────────────────────
+// ── Mix with vector weight (lerp with per-component t) ───────────────────────
 
-/// Component-wise lerp: mix(a, b, t) = a + t * (b - a).
-[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, const float3& t) noexcept {
+/// Component-wise lerp: lerp(a, b, t) = a + t * (b - a).
+[[nodiscard]] inline constexpr float3 lerp(const float3& a, const float3& b, const float3& t) noexcept {
     return {a.x + t.x*(b.x-a.x), a.y + t.y*(b.y-a.y), a.z + t.z*(b.z-a.z)};
 }
+/// @deprecated Use lerp(). GLSL compatibility alias — will be removed in a future version.
+[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, const float3& t) noexcept { return lerp(a, b, t); }
 
 // ── Distance ─────────────────────────────────────────────────────────────────
 
@@ -256,20 +263,22 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
 }
 
 /// Normal matrix = transpose(inverse(M)).
-/// Equivalent to glm::inverseTranspose(glm::mat3(transform)).
+/// Equivalent to glm::inverseTranspose(glm::mat3(transform)) — use inverseTranspose(toFloat3x3(t)).
 [[nodiscard]] inline float3x3 inverseTranspose(const float3x3& m) noexcept {
     return transpose(inverse(m));
 }
 
 /// Extract the upper-left 3×3 submatrix from a 4×4 matrix.
-/// Used for normal-matrix construction: inverseTranspose(mat3(transform)).
-[[nodiscard]] inline constexpr float3x3 mat3(const float4x4& m) noexcept {
+/// Equivalent to float3x3(m) truncation in Slang shaders.
+[[nodiscard]] inline constexpr float3x3 toFloat3x3(const float4x4& m) noexcept {
     return {
         {m[0][0], m[0][1], m[0][2]},
         {m[1][0], m[1][1], m[1][2]},
         {m[2][0], m[2][1], m[2][2]},
     };
 }
+/// @deprecated Use toFloat3x3(). GLSL compatibility alias — will be removed in a future version.
+[[nodiscard]] inline constexpr float3x3 mat3(const float4x4& m) noexcept { return toFloat3x3(m); }
 
 // ── Pointer access (Vulkan buffer uploads) ────────────────────────────────────
 //
