@@ -25,6 +25,23 @@ struct quaternion {
     [[nodiscard]] constexpr bool operator==(const quaternion&) const noexcept = default;
 };
 
+/// Rotate a 3D vector by a unit quaternion: q * v * q⁻¹.
+/// Equivalent to glm::operator*(quat, vec3).
+[[nodiscard]] inline constexpr float3 operator*(const quaternion& q, const float3& v) noexcept {
+    // Rodrigues' formula: v' = v + 2w(qv × v) + 2(qv × (qv × v))
+    const float3 qv{q.x, q.y, q.z};
+    const float3 t{
+        2.f * (qv.y * v.z - qv.z * v.y),
+        2.f * (qv.z * v.x - qv.x * v.z),
+        2.f * (qv.x * v.y - qv.y * v.x)
+    };
+    return {
+        v.x + q.w * t.x + (qv.y * t.z - qv.z * t.y),
+        v.y + q.w * t.y + (qv.z * t.x - qv.x * t.z),
+        v.z + q.w * t.z + (qv.x * t.y - qv.y * t.x)
+    };
+}
+
 /// Convert a unit quaternion to a 4×4 row-major rotation matrix.
 /// Equivalent to glm::mat4_cast(q) — same abstract rotation, row-major storage.
 [[nodiscard]] inline float4x4 toMatrix(const quaternion& q) noexcept {
