@@ -7,6 +7,23 @@ Types mirror the Slang / HLSL built-in math vocabulary (`float2`, `float3`, `flo
 share the same vocabulary and **no transpose is required** when uploading matrices to a
 `row_major float4x4` GPU buffer.
 
+## Naming conventions
+
+- **One canonical name per operation — no aliases.** Every function has exactly one
+  spelling; there are no GLSL/glm compatibility aliases (`mix`, `mat3`, `mat4_cast`,
+  `lookAtRH`, `perspectiveRH_ZO`, … were removed). This keeps the surface unambiguous.
+- **Aligned with Slang/HLSL where an intrinsic exists.** Vector/matrix functions reuse the
+  Slang intrinsic spelling: `dot`, `cross`, `normalize`, `length`, `lerp` (not `mix`),
+  `clamp`, `reflect`, `transpose`, `inverse`, `radians`/`degrees`.
+- **Casting helpers follow the `toFloatNxN` pattern:** `toFloat3x3(float4x4)` (matrix
+  truncation) and `toFloat4x4(quaternion)` (rotation matrix). Slang has no quaternion type,
+  so quaternion algebra (`dot`, `normalize`, `conjugate`, `operator*`, `slerp`) uses standard
+  quaternion-math names.
+- **Single coordinate convention → no `RH`/`ZO` suffix.** The library ships only a
+  right-handed (`RH`) coordinate system with Vulkan zero-to-one (`ZO`) depth, so `lookAt` /
+  `perspective` (and `inverseLookAt` / `inversePerspective`) carry no suffix — the suffix
+  would disambiguate nothing. (`RH` = camera looks down −Z; `ZO` = NDC depth ∈ [0, 1].)
+
 ## Matrix layout — the core design decision
 
 Matrices are stored **row-major**: rows are contiguous in memory.
@@ -56,14 +73,15 @@ pack_matrix(row_major)` directive), the CPU and GPU byte layout are identical.  
 | `sm::normalize(v)` | Unit vector |
 | `sm::min/max(a, b)` | Component-wise min/max |
 | `sm::clamp(v, lo, hi)` | Component-wise clamp |
-| `sm::lerp(a, b, t)` | Linear interpolation (GLSL alias `sm::mix` is deprecated) |
+| `sm::lerp(a, b, t)` | Linear interpolation |
 | `sm::reflect(i, n)` | Reflection about normal |
 | `sm::radians/degrees(x)` | Angle conversion |
 | `sm::pi<float>()` | π constant |
 | `sm::transpose(m)` | Matrix transpose |
 | `sm::inverse(m)` | Matrix inverse (Gauss-Jordan for 4×4, Cramer for 3×3) |
 | `sm::inverseTranspose(m)` | `transpose(inverse(m))` — normal matrix |
-| `sm::toFloat3x3(float4x4)` | Upper-left 3×3 extraction (alias `sm::mat3` is deprecated) |
+| `sm::determinant(float3x3)` | 3×3 determinant |
+| `sm::toFloat3x3(float4x4)` | Upper-left 3×3 extraction |
 | `sm::abs(v)` | Component-wise absolute value |
 | `sm::smoothstep(e0, e1, x)` | Hermite smooth-step |
 | `sm::distance(a, b)` | Euclidean distance between two float3 points |
@@ -71,20 +89,36 @@ pack_matrix(row_major)` directive), the CPU and GPU byte layout are identical.  
 
 ## Transform builders
 
-All builders assume a right-handed coordinate system and Vulkan depth range [0, 1].
+All builders assume a right-handed coordinate system and Vulkan depth range [0, 1]
+(the only convention this library ships, so no `RH`/`ZO` name suffix is needed).
 
 | Function | Description |
 |----------|-------------|
-| `sm::lookAtRH(eye, center, up)` | View matrix (RH) |
-| `sm::lookAt(eye, center, up)` | Alias for `lookAtRH` |
-| `sm::perspectiveRH_ZO(fovY, aspect, near, far)` | Perspective projection (RH, Vulkan ZO) |
-| `sm::perspective(fovY, aspect, near, far)` | Alias for `perspectiveRH_ZO` |
+| `sm::lookAt(eye, center, up)` | View matrix (right-handed) |
+| `sm::perspective(fovY, aspect, near, far)` | Perspective projection (right-handed, Vulkan ZO depth) |
+| `sm::inverseLookAt(eye, center, up)` | Analytical inverse of `lookAt` (~128× cheaper than `inverse`) |
+| `sm::inversePerspective(fovY, aspect, near, far)` | Analytical inverse of `perspective` |
 | `sm::translate(m, v)` | M × T(v) |
 | `sm::rotate(m, angle, axis)` | M × R(angle, axis) — Rodrigues formula |
 | `sm::scale(m, v)` | M × S(v) |
-| `sm::toMatrix(q)` | Quaternion → rotation matrix (alias `sm::mat4_cast` also available) |
+| `sm::toFloat4x4(q)` | Quaternion → rotation matrix |
 | `sm::angleAxis(angle, axis)` | Build rotation quaternion |
 | `sm::identity<T>()` | Identity value for any matrix/quaternion type |
+
+## Quaternion algebra
+
+Slang/HLSL has no quaternion type, so these have no canonical intrinsic name;
+`dot`/`normalize` reuse the vector-intrinsic spelling, the rest use standard
+quaternion-math conventions.
+
+| Function | Description |
+|----------|-------------|
+| `sm::dot(a, b)` | 4D quaternion dot product |
+| `sm::normalize(q)` | Unit quaternion (identity if degenerate) |
+| `sm::conjugate(q)` | Vector-part negation (= inverse for unit quaternions) |
+| `a * b` | Hamilton product — composes rotations (`(a*b)*v == a*(b*v)`) |
+| `sm::slerp(a, b, t)` | Shortest-arc spherical interpolation (nlerp fallback near-parallel) |
+| `q * v` | Rotate a `float3` by a unit quaternion |
 
 ## Usage
 
@@ -113,12 +147,13 @@ cmake --build build
 cd build; ctest --output-on-failure
 ```
 
-All 26 tests pass (vectors, matrices, quaternions, transforms, layout verification).
+All 39 tests pass (vectors, matrices, quaternion algebra, transforms, inverse
+projection/view round-trips, sky-reprojection math, layout verification).
 
 ## References
 
 - [Slang language reference](https://shader-slang.com/slang/user-guide/convenience-features.html) — built-in math type naming and row-major convention
 - [HLSL matrix packing](https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-per-component-math) — `row_major` / `column_major` storage qualifiers
 - [Rodrigues rotation formula](https://en.wikipedia.org/wiki/Rodrigues%27_rotation_formula) — used in `sm::rotate`
-- [Quaternion to rotation matrix](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/) — used in `sm::toMatrix` / `sm::mat4_cast`
+- [Quaternion to rotation matrix](https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/) — used in `sm::toFloat4x4`
 

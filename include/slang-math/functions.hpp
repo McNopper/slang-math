@@ -108,11 +108,6 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
     return a + t * (b - a);
 }
 
-/// @deprecated Use lerp(). GLSL compatibility alias — will be removed in a future version.
-[[nodiscard]] inline constexpr float  mix(float  a, float  b, float t) noexcept { return lerp(a, b, t); }
-/// @deprecated Use lerp(). GLSL compatibility alias — will be removed in a future version.
-[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, float t) noexcept { return lerp(a, b, t); }
-
 // ── Abs ───────────────────────────────────────────────────────────────────────
 
 [[nodiscard]] inline float3 abs(const float3& v) noexcept {
@@ -155,8 +150,6 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
 [[nodiscard]] inline constexpr float3 lerp(const float3& a, const float3& b, const float3& t) noexcept {
     return {a.x + t.x*(b.x-a.x), a.y + t.y*(b.y-a.y), a.z + t.z*(b.z-a.z)};
 }
-/// @deprecated Use lerp(). GLSL compatibility alias — will be removed in a future version.
-[[nodiscard]] inline constexpr float3 mix(const float3& a, const float3& b, const float3& t) noexcept { return lerp(a, b, t); }
 
 // ── Distance ─────────────────────────────────────────────────────────────────
 
@@ -277,8 +270,6 @@ template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return 
         {m[2][0], m[2][1], m[2][2]},
     };
 }
-/// @deprecated Use toFloat3x3(). GLSL compatibility alias — will be removed in a future version.
-[[nodiscard]] inline constexpr float3x3 mat3(const float4x4& m) noexcept { return toFloat3x3(m); }
 
 // ── Pointer access (Vulkan buffer uploads) ────────────────────────────────────
 //

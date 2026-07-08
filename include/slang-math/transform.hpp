@@ -61,13 +61,13 @@ namespace sm {
 
 // ── Camera projection ─────────────────────────────────────────────────────────
 
-/// Right-handed look-at view matrix.
+/// Right-handed look-at view matrix (Vulkan ZO convention across this library).
 ///
 /// Rows 0-2 contain the orthonormal camera basis vectors (right, up, -forward) plus
 /// their translation components.  Upload directly — no transpose.
-[[nodiscard]] inline float4x4 lookAtRH(const float3& eye,
-                                        const float3& center,
-                                        const float3& up) noexcept {
+[[nodiscard]] inline float4x4 lookAt(const float3& eye,
+                                      const float3& center,
+                                      const float3& up) noexcept {
     const float3 f = normalize(center - eye); // forward (into scene)
     const float3 r = normalize(cross(f, up)); // right
     const float3 u = cross(r, f);             // re-orthogonalized up
@@ -80,16 +80,16 @@ namespace sm {
     };
 }
 
-/// Inverse of a lookAtRH view matrix — analytical, ~0 arithmetic operations.
+/// Inverse of a lookAt view matrix — analytical, ~0 arithmetic operations.
 ///
 /// Exploits the orthonormal structure: the 3×3 rotation block of V is orthogonal
 /// (R⁻¹ = Rᵀ), and the translation column unpacks directly from the eye position.
-/// Equivalent to sm::inverse(lookAtRH(eye, center, up)) but ~128× cheaper.
+/// Equivalent to sm::inverse(lookAt(eye, center, up)) but ~128× cheaper.
 ///
 /// Use instead of sm::inverse() whenever inverting a view matrix each frame.
-[[nodiscard]] inline float4x4 inverseLookAtRH(const float3& eye,
-                                               const float3& center,
-                                               const float3& up) noexcept {
+[[nodiscard]] inline float4x4 inverseLookAt(const float3& eye,
+                                             const float3& center,
+                                             const float3& up) noexcept {
     const float3 f = normalize(center - eye);
     const float3 r = normalize(cross(f, up));
     const float3 u = cross(r, f);
@@ -102,15 +102,15 @@ namespace sm {
     };
 }
 
-/// Analytical inverse of a perspectiveRH_ZO matrix — ~4 divisions, no pivoting.
+/// Analytical inverse of a perspective matrix — ~4 divisions, no pivoting.
 ///
 /// The RH ZO perspective matrix has only 6 non-zero entries; its inverse is also
-/// sparse and computable in closed form.  Equivalent to sm::inverse(perspectiveRH_ZO(…))
+/// sparse and computable in closed form.  Equivalent to sm::inverse(perspective(…))
 /// but ~128× cheaper.
 ///
 /// Use instead of sm::inverse() whenever inverting a projection matrix each frame.
-[[nodiscard]] inline float4x4 inversePerspectiveRH_ZO(float fovY, float aspect,
-                                                        float zNear, float zFar) noexcept {
+[[nodiscard]] inline float4x4 inversePerspective(float fovY, float aspect,
+                                                  float zNear, float zFar) noexcept {
     const float f  = 1.f / std::tan(fovY * 0.5f);
     const float d  = zFar - zNear;
     return {
@@ -122,20 +122,14 @@ namespace sm {
 }
 
 
-[[nodiscard]] inline float4x4 lookAt(const float3& eye,
-                                      const float3& center,
-                                      const float3& up) noexcept {
-    return lookAtRH(eye, center, up);
-}
-
 /// Right-handed perspective projection with [0, 1] depth range (Vulkan).
 ///
 /// fovY    — vertical field of view in radians
 /// aspect  — width / height
 /// zNear   — near plane distance (> 0)
 /// zFar    — far plane distance (> zNear)
-[[nodiscard]] inline float4x4 perspectiveRH_ZO(float fovY, float aspect,
-                                                float zNear, float zFar) noexcept {
+[[nodiscard]] inline float4x4 perspective(float fovY, float aspect,
+                                           float zNear, float zFar) noexcept {
     const float f = 1.f / std::tan(fovY * 0.5f);
     const float d = zFar - zNear;
     return {
@@ -146,18 +140,7 @@ namespace sm {
     };
 }
 
-/// Alias for perspectiveRH_ZO.
-[[nodiscard]] inline float4x4 perspective(float fovY, float aspect,
-                                           float zNear, float zFar) noexcept {
-    return perspectiveRH_ZO(fovY, aspect, zNear, zFar);
-}
-
 // ── Quaternion helpers ────────────────────────────────────────────────────────
-
-/// Convert quaternion to 4×4 rotation matrix.
-[[nodiscard]] inline float4x4 mat4_cast(const quaternion& q) noexcept {
-    return toMatrix(q);
-}
 
 /// Build a quaternion representing a rotation of `angle` radians about `axis`.
 [[nodiscard]] inline quaternion angleAxis(float angle, const float3& axis) noexcept {

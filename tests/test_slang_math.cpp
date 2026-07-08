@@ -182,14 +182,14 @@ TEST(Functions, Radians) {
 TEST(Functions, Mat3FromMat4) {
     float4x4 m{1.f};
     m[3] = {99, 99, 99, 1}; // row 3 (homogeneous row) — should be ignored in 3×3 extraction
-    float3x3 m3 = mat3(m);
+    float3x3 m3 = toFloat3x3(m);
     EXPECT_EQ(m3, float3x3::identity());
 }
 
 // ── Quaternion ────────────────────────────────────────────────────────────────
 
 TEST(Quaternion, IdentityToMatrix) {
-    float4x4 m = toMatrix(quaternion::identity());
+    float4x4 m = toFloat4x4(quaternion::identity());
     EXPECT_TRUE(near(m, float4x4{1.f}));
 }
 
@@ -197,7 +197,7 @@ TEST(Quaternion, AngleAxisY90) {
     // 90-degree rotation about Y: x→z, z→-x
     const float angle = radians(90.f);
     quaternion q = angleAxis(angle, {0, 1, 0});
-    float4x4   m = mat4_cast(q);
+    float4x4   m = toFloat4x4(q);
     float4 x_col{1, 0, 0, 0};
     float4 result = m * x_col;
     EXPECT_NEAR(result.x,  0.f, 1e-4f);
@@ -225,7 +225,7 @@ TEST(Transform, ScaleVector) {
 }
 
 TEST(Transform, LookAtBuildsOrthonormalBasis) {
-    float4x4 v = lookAtRH({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
+    float4x4 v = lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
     // With row-major storage, rows 0-2 contain the orthonormal camera basis vectors.
     float3 row0{v[0][0], v[0][1], v[0][2]};  // right
     float3 row1{v[1][0], v[1][1], v[1][2]};  // up
@@ -239,7 +239,7 @@ TEST(Transform, LookAtBuildsOrthonormalBasis) {
 
 TEST(Transform, PerspectiveDepthRange) {
     // Near plane should map to depth 0, far to depth 1 (Vulkan ZO convention).
-    float4x4 p = perspectiveRH_ZO(radians(90.f), 1.f, 0.1f, 100.f);
+    float4x4 p = perspective(radians(90.f), 1.f, 0.1f, 100.f);
     // A point at z = -zNear (camera-space): NDC depth should be 0.
     float4 near_pt{0, 0, -0.1f, 1};
     float4 ndc = p * near_pt;
@@ -258,4 +258,140 @@ TEST(Transform, RowVectorShaderConvention) {
     float4 row_result = v * m;
     float4 col_result = transpose(m) * v;
     EXPECT_TRUE(near(row_result, col_result));
+}
+
+// ── Inverse projection / view (S2: back the shipped sky reprojection fix) ──────
+
+TEST(InverseProjection, PerspectiveInverseRoundTrip) {
+    // inversePerspective must be the exact inverse of perspective.
+    const float4x4 p    = perspective(radians(60.f), 16.f / 9.f, 0.1f, 250.f);
+    const float4x4 pInv = inversePerspective(radians(60.f), 16.f / 9.f, 0.1f, 250.f);
+    EXPECT_TRUE(near(p * pInv, float4x4{1.f}, 1e-4f));
+    EXPECT_TRUE(near(pInv * p, float4x4{1.f}, 1e-4f));
+}
+
+TEST(InverseProjection, AnalyticalPerspectiveMatchesGenericInverse) {
+    // The analytical inverse must agree with the generic Gauss-Jordan inverse.
+    const float4x4 p = perspective(radians(45.f), 1.333f, 0.5f, 500.f);
+    EXPECT_TRUE(near(inversePerspective(radians(45.f), 1.333f, 0.5f, 500.f),
+                     inverse(p), 1e-4f));
+}
+
+TEST(InverseProjection, LookAtInverseRoundTrip) {
+    // inverseLookAt must be the exact inverse of lookAt.
+    const float3 eye{3, 4, 10}, center{0, 1, 0}, up{0, 1, 0};
+    const float4x4 v    = lookAt(eye, center, up);
+    const float4x4 vInv = inverseLookAt(eye, center, up);
+    EXPECT_TRUE(near(v * vInv, float4x4{1.f}, 1e-4f));
+    EXPECT_TRUE(near(vInv * v, float4x4{1.f}, 1e-4f));
+}
+
+TEST(InverseProjection, AnalyticalLookAtMatchesGenericInverse) {
+    const float3 eye{-2, 5, 7}, center{1, 0, -1}, up{0, 1, 0};
+    EXPECT_TRUE(near(inverseLookAt(eye, center, up),
+                     inverse(lookAt(eye, center, up)), 1e-4f));
+}
+
+TEST(InverseProjection, InvViewProjEqualsProductOfAnalyticalInverses) {
+    // (P*V)^-1 == V^-1 * P^-1 — the identity that lets Application replace the
+    // generic sm::inverse(curViewProj) with the cheap analytical pair.
+    const float3 eye{0, 2, 6}, center{0, 0, 0}, up{0, 1, 0};
+    const float4x4 view = lookAt(eye, center, up);
+    const float4x4 proj = perspective(radians(50.f), 4.f / 3.f, 0.1f, 100.f);
+    const float4x4 vp   = proj * view;
+    const float4x4 invVpGeneric    = inverse(vp);
+    const float4x4 invVpAnalytical = inverseLookAt(eye, center, up) *
+                                     inversePerspective(radians(50.f), 4.f / 3.f, 0.1f, 100.f);
+    EXPECT_TRUE(near(invVpGeneric, invVpAnalytical, 1e-3f));
+    EXPECT_TRUE(near(vp * invVpGeneric, float4x4{1.f}, 1e-4f));
+}
+
+// Replicate the shader's background-reprojection math (motion_vector.comp.slang):
+// reconstruct the world-space view ray for a pixel from invViewProj, then project
+// that direction (point at infinity, w=0) through another frame's viewProj.
+static float2 reprojectBackground(const float4x4& invCurViewProj,
+                                  const float4x4& prevViewProj, float2 ndc) {
+    const float4 farW  = invCurViewProj * float4{ndc.x, ndc.y, 1.f, 1.f};
+    const float4 nearW = invCurViewProj * float4{ndc.x, ndc.y, 0.f, 1.f};
+    const float3 dir   = static_cast<float3>(farW) / farW.w - static_cast<float3>(nearW) / nearW.w;
+    const float4 prevClip = prevViewProj * float4{dir, 0.f};
+    return {prevClip.x / prevClip.w, prevClip.y / prevClip.w};
+}
+
+TEST(SkyReprojection, StaticCameraGivesZeroMotion) {
+    // With prev == cur, a background pixel must reproject to itself (motion ~ 0).
+    const float4x4 vp = perspective(radians(60.f), 16.f / 9.f, 0.1f, 100.f) *
+                        lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
+    const float4x4 invVp = inverse(vp);
+    for (float2 ndc : {float2{0, 0}, float2{0.5f, -0.3f}, float2{-0.8f, 0.6f}}) {
+        const float2 prevNdc = reprojectBackground(invVp, vp, ndc);
+        EXPECT_TRUE(near(prevNdc, ndc, 1e-3f));
+    }
+}
+
+TEST(SkyReprojection, CameraRotationGivesFiniteNonZeroMotion) {
+    // Rotating the camera between frames must yield a finite, non-zero background
+    // motion vector (the sky tracks camera rotation instead of getting MV = 0).
+    const float4x4 proj = perspective(radians(60.f), 16.f / 9.f, 0.1f, 100.f);
+    const float4x4 curView  = lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
+    const float4x4 prevView = lookAt({0, 0, 5}, {0.5f, 0, 0}, {0, 1, 0}); // yawed
+    const float4x4 curVp  = proj * curView;
+    const float4x4 prevVp = proj * prevView;
+    const float2 ndc{0.3f, 0.1f};
+    const float2 prevNdc = reprojectBackground(inverse(curVp), prevVp, ndc);
+    EXPECT_TRUE(std::isfinite(prevNdc.x) && std::isfinite(prevNdc.y));
+    EXPECT_GT(length(prevNdc - ndc), 1e-3f); // motion is non-zero under rotation
+
+    // Self-consistency: projecting the reconstructed ray through the CURRENT VP
+    // must return the original pixel (proves invCurViewProj is a true inverse).
+    const float2 selfNdc = reprojectBackground(inverse(curVp), curVp, ndc);
+    EXPECT_TRUE(near(selfNdc, ndc, 1e-3f));
+}
+
+// ── Quaternion algebra ────────────────────────────────────────────────────────
+
+TEST(QuaternionAlgebra, NormalizeProducesUnitLength) {
+    quaternion q = normalize(quaternion{1, 2, 3, 4});
+    EXPECT_NEAR(std::sqrt(dot(q, q)), 1.f, kEps);
+}
+
+TEST(QuaternionAlgebra, ConjugateInvertsRotation) {
+    // q * conjugate(q) == identity for a unit quaternion.
+    const quaternion q = angleAxis(radians(37.f), {0.3f, 0.7f, -0.2f});
+    const quaternion qc = q * conjugate(q);
+    EXPECT_TRUE(near(float3{qc.x, qc.y, qc.z}, {0, 0, 0}, 1e-5f));
+    EXPECT_NEAR(qc.w, 1.f, 1e-5f);
+}
+
+TEST(QuaternionAlgebra, MultiplyComposesRotations) {
+    // (a * b) applied to v == a applied to (b applied to v).
+    const quaternion a = angleAxis(radians(90.f), {0, 1, 0});
+    const quaternion b = angleAxis(radians(90.f), {1, 0, 0});
+    const float3 v{0, 0, 1};
+    const float3 composed = (a * b) * v;
+    const float3 sequential = a * (b * v);
+    EXPECT_TRUE(near(composed, sequential, 1e-4f));
+}
+
+TEST(QuaternionAlgebra, MultiplyMatchesMatrixComposition) {
+    // toFloat4x4(a*b) == toFloat4x4(a) * toFloat4x4(b).
+    const quaternion a = angleAxis(radians(40.f), {0, 1, 0});
+    const quaternion b = angleAxis(radians(25.f), {1, 0, 0});
+    EXPECT_TRUE(near(toFloat4x4(a * b), toFloat4x4(a) * toFloat4x4(b), 1e-4f));
+}
+
+TEST(QuaternionAlgebra, SlerpEndpoints) {
+    const quaternion a = angleAxis(radians(0.f),  {0, 1, 0});
+    const quaternion b = angleAxis(radians(90.f), {0, 1, 0});
+    EXPECT_TRUE(near(slerp(a, b, 0.f) * float3{1, 0, 0}, a * float3{1, 0, 0}, 1e-4f));
+    EXPECT_TRUE(near(slerp(a, b, 1.f) * float3{1, 0, 0}, b * float3{1, 0, 0}, 1e-4f));
+}
+
+TEST(QuaternionAlgebra, SlerpMidpointIsHalfAngle) {
+    // Halfway between 0° and 90° about Y is a 45° rotation.
+    const quaternion a = angleAxis(radians(0.f),  {0, 1, 0});
+    const quaternion b = angleAxis(radians(90.f), {0, 1, 0});
+    const quaternion mid = slerp(a, b, 0.5f);
+    const quaternion expected = angleAxis(radians(45.f), {0, 1, 0});
+    EXPECT_TRUE(near(mid * float3{1, 0, 0}, expected * float3{1, 0, 0}, 1e-4f));
 }

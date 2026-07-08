@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(slang-math VERSION 0.1.4 LANGUAGES CXX)
+project(slang-math VERSION 0.1.5 LANGUAGES CXX)
 
 # Header-only interface library — no compilation, no dependencies.
 add_library(slang-math INTERFACE)
