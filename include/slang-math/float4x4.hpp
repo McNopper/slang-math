@@ -27,6 +27,8 @@ namespace sm {
 struct float4x4 {
     float4 rows[4]{};
 
+    static constexpr std::int32_t size = 4;
+
     constexpr float4x4() noexcept = default;
 
     /// Construct from four row vectors (row 0, row 1, row 2, row 3).
@@ -43,8 +45,8 @@ struct float4x4 {
     }
 
     /// `m[row]` returns row `row`.  `m[row][col]` = element at (row, col).
-    [[nodiscard]] constexpr float4& operator[](int row) noexcept { return rows[row]; }
-    [[nodiscard]] constexpr const float4& operator[](int row) const noexcept { return rows[row]; }
+    [[nodiscard]] constexpr float4& operator[](std::int32_t row) noexcept { return rows[row]; }
+    [[nodiscard]] constexpr const float4& operator[](std::int32_t row) const noexcept { return rows[row]; }
 
     /// `M * v` — column-vector transform: `result[i] = dot(row i, v)`.  Slang: `mul(M, v)`.
     [[nodiscard]] constexpr float4 operator*(const float4& v) const noexcept {
@@ -56,19 +58,8 @@ struct float4x4 {
         };
     }
 
-    /// `M * M` — matrix multiply: `result[i][j] = Σ_k rows[i][k] * rhs[k][j]`.
-    [[nodiscard]] float4x4 operator*(const float4x4& rhs) const noexcept {
-        float4x4 result;
-        for (int i = 0; i < 4; ++i) {
-            result.rows[i] = {
-                rows[i].x*rhs.rows[0].x + rows[i].y*rhs.rows[1].x + rows[i].z*rhs.rows[2].x + rows[i].w*rhs.rows[3].x,
-                rows[i].x*rhs.rows[0].y + rows[i].y*rhs.rows[1].y + rows[i].z*rhs.rows[2].y + rows[i].w*rhs.rows[3].y,
-                rows[i].x*rhs.rows[0].z + rows[i].y*rhs.rows[1].z + rows[i].z*rhs.rows[2].z + rows[i].w*rhs.rows[3].z,
-                rows[i].x*rhs.rows[0].w + rows[i].y*rhs.rows[1].w + rows[i].z*rhs.rows[2].w + rows[i].w*rhs.rows[3].w,
-            };
-        }
-        return result;
-    }
+    /// `M * M` — matrix multiply (provided by the free `operator*` template in
+    /// functions.hpp, generic over all square matrices).
 
     [[nodiscard]] constexpr bool operator==(const float4x4&) const noexcept = default;
 };

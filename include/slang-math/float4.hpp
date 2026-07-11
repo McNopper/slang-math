@@ -15,6 +15,9 @@ struct float4 {
         struct { float r, g, b, a; }; // colour alias — same bytes as x/y/z/w
     };
 
+    static constexpr std::int32_t size = 4;
+    using value_type = float;
+
     constexpr float4() noexcept : x{}, y{}, z{}, w{} {}
     constexpr float4(float x, float y, float z, float w) noexcept : x(x), y(y), z(z), w(w) {}
     constexpr float4(const float3& xyz, float w) noexcept : x(xyz.x), y(xyz.y), z(xyz.z), w(w) {}
@@ -24,8 +27,8 @@ struct float4 {
     /// Truncate to xyz.
     [[nodiscard]] constexpr explicit operator float3() const noexcept { return {x, y, z}; }
 
-    [[nodiscard]] constexpr float& operator[](int i) noexcept { return (&x)[i]; }
-    [[nodiscard]] constexpr const float& operator[](int i) const noexcept { return (&x)[i]; }
+    [[nodiscard]] constexpr float& operator[](std::int32_t i) noexcept { return (&x)[i]; }
+    [[nodiscard]] constexpr const float& operator[](std::int32_t i) const noexcept { return (&x)[i]; }
 
     [[nodiscard]] constexpr float4 operator+(const float4& o) const noexcept { return {x+o.x, y+o.y, z+o.z, w+o.w}; }
     [[nodiscard]] constexpr float4 operator-(const float4& o) const noexcept { return {x-o.x, y-o.y, z-o.z, w-o.w}; }

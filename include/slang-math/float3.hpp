@@ -16,13 +16,16 @@ struct float3 {
         struct { float r, g, b; }; // colour alias — same bytes as x/y/z
     };
 
+    static constexpr std::int32_t size = 3;
+    using value_type = float;
+
     constexpr float3() noexcept : x{}, y{}, z{} {}
     constexpr float3(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
     constexpr float3(const float2& xy, float z) noexcept : x(xy.x), y(xy.y), z(z) {}
     constexpr explicit float3(float s) noexcept : x(s), y(s), z(s) {}
 
-    [[nodiscard]] constexpr float& operator[](int i) noexcept { return (&x)[i]; }
-    [[nodiscard]] constexpr const float& operator[](int i) const noexcept { return (&x)[i]; }
+    [[nodiscard]] constexpr float& operator[](std::int32_t i) noexcept { return (&x)[i]; }
+    [[nodiscard]] constexpr const float& operator[](std::int32_t i) const noexcept { return (&x)[i]; }
 
     [[nodiscard]] constexpr float3 operator+(const float3& o) const noexcept { return {x + o.x, y + o.y, z + o.z}; }
     [[nodiscard]] constexpr float3 operator-(const float3& o) const noexcept { return {x - o.x, y - o.y, z - o.z}; }

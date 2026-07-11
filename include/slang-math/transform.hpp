@@ -2,6 +2,7 @@
 
 #include "float3.hpp"
 #include "float4x4.hpp"
+#include "float2x2.hpp"
 #include "float3x3.hpp"
 #include "quaternion.hpp"
 #include "functions.hpp"
@@ -153,8 +154,9 @@ namespace sm {
 
 /// identity<T>() — returns the identity value for T.
 template<typename T> [[nodiscard]] inline T identity() noexcept;
-template<> [[nodiscard]] inline float4x4   identity<float4x4>()   noexcept { return float4x4::identity(); }
+template<> [[nodiscard]] inline float2x2   identity<float2x2>()   noexcept { return float2x2::identity(); }
 template<> [[nodiscard]] inline float3x3   identity<float3x3>()   noexcept { return float3x3::identity(); }
+template<> [[nodiscard]] inline float4x4   identity<float4x4>()   noexcept { return float4x4::identity(); }
 template<> [[nodiscard]] inline quaternion identity<quaternion>()  noexcept { return quaternion::identity(); }
 
 } // namespace sm

@@ -13,6 +13,8 @@ namespace sm {
 struct float3x3 {
     float3 rows[3]{};
 
+    static constexpr std::int32_t size = 3;
+
     constexpr float3x3() noexcept = default;
 
     /// Construct from three row vectors (row 0, row 1, row 2).
@@ -28,8 +30,8 @@ struct float3x3 {
     }
 
     /// `m[row]` returns row `row`.  `m[row][col]` = element at (row, col).
-    [[nodiscard]] constexpr float3& operator[](int row) noexcept { return rows[row]; }
-    [[nodiscard]] constexpr const float3& operator[](int row) const noexcept { return rows[row]; }
+    [[nodiscard]] constexpr float3& operator[](std::int32_t row) noexcept { return rows[row]; }
+    [[nodiscard]] constexpr const float3& operator[](std::int32_t row) const noexcept { return rows[row]; }
 
     /// `M * v` — column-vector transform: `result[i] = dot(row i, v)`.
     [[nodiscard]] constexpr float3 operator*(const float3& v) const noexcept {
@@ -40,18 +42,8 @@ struct float3x3 {
         };
     }
 
-    /// `M * M` — matrix multiply.
-    [[nodiscard]] constexpr float3x3 operator*(const float3x3& rhs) const noexcept {
-        float3x3 result;
-        for (int i = 0; i < 3; ++i) {
-            result.rows[i] = {
-                rows[i].x*rhs.rows[0].x + rows[i].y*rhs.rows[1].x + rows[i].z*rhs.rows[2].x,
-                rows[i].x*rhs.rows[0].y + rows[i].y*rhs.rows[1].y + rows[i].z*rhs.rows[2].y,
-                rows[i].x*rhs.rows[0].z + rows[i].y*rhs.rows[1].z + rows[i].z*rhs.rows[2].z,
-            };
-        }
-        return result;
-    }
+    /// `M * M` — matrix multiply (provided by the free `operator*` template in
+    /// functions.hpp, generic over all square matrices).
 
     [[nodiscard]] constexpr bool operator==(const float3x3&) const noexcept = default;
 };

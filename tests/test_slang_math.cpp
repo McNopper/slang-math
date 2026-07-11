@@ -25,6 +25,16 @@ static bool near(const float4x4& a, const float4x4& b, float eps = kEps) {
         if (!near(a[c], b[c], eps)) return false;
     return true;
 }
+static bool near(const float2x2& a, const float2x2& b, float eps = kEps) {
+    for (int r = 0; r < 2; ++r)
+        if (!near(a[r], b[r], eps)) return false;
+    return true;
+}
+static bool near(const float3x3& a, const float3x3& b, float eps = kEps) {
+    for (int r = 0; r < 3; ++r)
+        if (!near(a[r], b[r], eps)) return false;
+    return true;
+}
 
 // ── float2 ───────────────────────────────────────────────────────────────────
 
@@ -394,4 +404,171 @@ TEST(QuaternionAlgebra, SlerpMidpointIsHalfAngle) {
     const quaternion mid = slerp(a, b, 0.5f);
     const quaternion expected = angleAxis(radians(45.f), {0, 1, 0});
     EXPECT_TRUE(near(mid * float3{1, 0, 0}, expected * float3{1, 0, 0}, 1e-4f));
+}
+
+// ── Generic vector functions — float2 / float4 now at parity with float3 ──────
+
+TEST(Float2Functions, DotLengthNormalize) {
+    float2 a{3, 4};
+    EXPECT_NEAR(dot(a, a), 25.f, kEps);
+    EXPECT_NEAR(length(a), 5.f, kEps);
+    EXPECT_TRUE(near(normalize(a), float2{0.6f, 0.8f}));
+}
+
+TEST(Float4Functions, DotLengthNormalize) {
+    float4 a{0, 0, 3, 4};
+    EXPECT_NEAR(dot(a, a), 25.f, kEps);
+    EXPECT_NEAR(length(a), 5.f, kEps);
+    EXPECT_TRUE(near(normalize(a), float4{0, 0, 0.6f, 0.8f}));
+}
+
+TEST(Float2Functions, MinMaxClamp) {
+    EXPECT_EQ((min(float2{1, 8}, float2{5, 2})), (float2{1, 2}));
+    EXPECT_EQ((max(float2{1, 8}, float2{5, 2})), (float2{5, 8}));
+    EXPECT_EQ((clamp(float2{-1, 9}, 0.f, 5.f)), (float2{0, 5}));
+    EXPECT_EQ((clamp(float2{-1, 9}, float2{0, 0}, float2{5, 5})), (float2{0, 5}));
+}
+
+TEST(Float4Functions, MinMaxClamp) {
+    EXPECT_EQ((min(float4{1, 8, 3, 0}, float4{5, 2, 3, 9})), (float4{1, 2, 3, 0}));
+    EXPECT_EQ((clamp(float4{-1, 9, 4, -2}, 0.f, 5.f)), (float4{0, 5, 4, 0}));
+}
+
+TEST(Float2Functions, LerpAbsSqrtPow) {
+    EXPECT_TRUE(near(lerp(float2{0, 0}, float2{10, 20}, 0.5f), float2{5, 10}));
+    EXPECT_TRUE(near(lerp(float2{0, 0}, float2{10, 20}, float2{1, 0}), float2{10, 0}));
+    EXPECT_EQ((abs(float2{-2, 3})), (float2{2, 3}));
+    EXPECT_TRUE(near(sqrt(float2{4, 9}), float2{2, 3}));
+    EXPECT_TRUE(near(pow(float2{2, 3}, 2.f), float2{4, 9}));
+}
+
+TEST(Float4Functions, UnaryAndReflectDistance) {
+    // Reflect [1,0,0,0] about [1,0,0,0] -> [-1,0,0,0]; dot with forward -> -1.
+    EXPECT_NEAR(dot(reflect(float4{1, 0, 0, 0}, float4{1, 0, 0, 0}),
+                     float4{1, 0, 0, 0}), -1.f, kEps);
+    EXPECT_NEAR(distance(float4{0, 0, 0, 0}, float4{0, 3, 4, 0}), 5.f, kEps);
+    EXPECT_NEAR(cos(float4{0, 0, 0, 0}).x, 1.f, kEps);
+    EXPECT_NEAR(exp(float4{0, 0, 0, 0}).y, 1.f, kEps);
+    EXPECT_NEAR(log(float4{1, 1, 1, 1}).z, 0.f, kEps);
+}
+
+TEST(Float2Functions, DegenerateNormalizeIsZero) {
+    EXPECT_EQ(normalize(float2{0, 0}), (float2{0, 0}));
+}
+
+// ── uint3 + uint4 arithmetic ──────────────────────────────────────────────────
+
+TEST(Uint3, BasicArithmetic) {
+    uint3 a{1, 2, 3}, b{4, 5, 6};
+    EXPECT_EQ(a + b, (uint3{5, 7, 9}));
+    EXPECT_EQ(b - a, (uint3{3, 3, 3}));
+    EXPECT_EQ(a * 2u, (uint3{2, 4, 6}));
+    EXPECT_EQ(a[2], 3u);
+}
+
+TEST(Uint4, BasicArithmetic) {
+    uint4 a{1, 2, 3, 4}, b{10, 20, 30, 40};
+    EXPECT_EQ(a + b, (uint4{11, 22, 33, 44}));
+    EXPECT_EQ(b - a, (uint4{9, 18, 27, 36}));
+    EXPECT_EQ(a * b, (uint4{10, 40, 90, 160}));
+    EXPECT_EQ(a * 2u, (uint4{2, 4, 6, 8}));
+}
+
+// ── float2x2 ──────────────────────────────────────────────────────────────────
+
+TEST(Float2x2, Identity) {
+    float2x2 id{1.f};
+    for (int r = 0; r < 2; ++r)
+        for (int c = 0; c < 2; ++c)
+            EXPECT_EQ(id[r][c], (r == c) ? 1.f : 0.f);
+    EXPECT_EQ(identity<float2x2>(), id);
+}
+
+TEST(Float2x2, MatrixVectorMultiply) {
+    float2x2 m{{2, 0}, {0, 3}};
+    EXPECT_EQ((m * float2{1, 1}), (float2{2, 3}));
+}
+
+TEST(Float2x2, Transpose) {
+    float2x2 m{{1, 2}, {3, 4}};
+    EXPECT_EQ(transpose(m), (float2x2{{1, 3}, {2, 4}}));
+}
+
+TEST(Float2x2, MatrixMultiply) {
+    float2x2 a{{1, 2}, {3, 4}};
+    float2x2 b{{5, 6}, {7, 8}};
+    EXPECT_EQ(a * b, (float2x2{{19, 22}, {43, 50}}));
+    EXPECT_EQ(a * float2x2{1.f}, a);
+    EXPECT_EQ(float2x2{1.f} * a, a);
+}
+
+TEST(Float2x2, Determinant) {
+    EXPECT_NEAR(determinant(float2x2{{1, 2}, {3, 4}}), -2.f, kEps);
+    EXPECT_NEAR(determinant(float2x2{1.f}), 1.f, kEps);
+}
+
+TEST(Float2x2, InverseRoundTrip) {
+    float2x2 m{{4, 7}, {2, 6}};
+    float2x2 mi = inverse(m);
+    EXPECT_TRUE(near(m * mi, float2x2{1.f}, 1e-4f));
+    EXPECT_TRUE(near(mi * m, float2x2{1.f}, 1e-4f));
+    EXPECT_EQ(inverse(float2x2{{1, 2}, {2, 4}}), float2x2{1.f}); // singular -> identity
+}
+
+TEST(Float2x2, InverseTransposeAndValuePtr) {
+    EXPECT_EQ(inverseTranspose(float2x2{1.f}), float2x2{1.f});
+    float2x2 m{{1, 2}, {3, 4}};
+    const float* p = value_ptr(m);
+    EXPECT_EQ(p[0], 1.f);
+    EXPECT_EQ(p[1], 2.f);
+    EXPECT_EQ(p[2], 3.f);
+    EXPECT_EQ(p[3], 4.f);
+}
+
+TEST(Float2x2, ExtractFromLargerMatrices) {
+    float3x3 m3{{1, 2, 9}, {3, 4, 9}, {9, 9, 5}};
+    EXPECT_EQ(toFloat2x2(m3), (float2x2{{1, 2}, {3, 4}}));
+    float4x4 m4{{1, 2, 9, 9}, {3, 4, 9, 9}, {9, 9, 9, 9}, {9, 9, 9, 9}};
+    EXPECT_EQ(toFloat2x2(m4), (float2x2{{1, 2}, {3, 4}}));
+}
+
+// ── Generic matrix ops across sizes ───────────────────────────────────────────
+
+TEST(GenericMatrix, TransposeRoundTripAllSizes) {
+    float2x2 a{{1, 2}, {3, 4}};
+    EXPECT_EQ(transpose(transpose(a)), a);
+    float3x3 b{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+    EXPECT_EQ(transpose(transpose(b)), b);
+}
+
+TEST(GenericMatrix, Float3x3InverseAndInverseTranspose) {
+    float3x3 m{{4, 3, 0}, {1, 1, 0}, {0, 0, 5}};
+    EXPECT_TRUE(near(inverse(m) * m, float3x3{1.f}, 1e-4f));
+    EXPECT_TRUE(near(inverseTranspose(float3x3{1.f}), float3x3{1.f}));
+}
+
+// ── Concepts (compile-time contract) ──────────────────────────────────────────
+
+TEST(Concepts, Satisfaction) {
+    static_assert(vec<float2> && vec<float3> && vec<float4>);
+    static_assert(vec<uint2>  && vec<uint3>  && vec<uint4>);
+    static_assert(float_vec<float2> && float_vec<float3> && float_vec<float4>);
+    static_assert(!float_vec<uint2> && !float_vec<uint3> && !float_vec<uint4>);
+    static_assert(square_mat<float2x2> && square_mat<float3x3> && square_mat<float4x4>);
+    static_assert(!vec<float2x2> && !vec<float4x4>);
+    static_assert(!vec<quaternion> && !float_vec<quaternion>);
+    SUCCEED();
+}
+
+// ── uint vectors — element-generic ops (min/max/clamp/dot/value_ptr) ──────────
+
+TEST(UintFunctions, MinMaxClampDotValuePtr) {
+    EXPECT_EQ((min(uint3{1, 8, 3}, uint3{5, 2, 9})), (uint3{1, 2, 3}));
+    EXPECT_EQ((max(uint3{1, 8, 3}, uint3{5, 2, 9})), (uint3{5, 8, 9}));
+    EXPECT_EQ((clamp(uint3{0, 9, 4}, 1u, 5u)), (uint3{1, 5, 4}));
+    EXPECT_EQ(dot(uint3{1, 2, 3}, uint3{4, 5, 6}), 1u*4 + 2u*5 + 3u*6);
+    uint3 v{7, 8, 9};
+    const uint32_t* p = value_ptr(v);
+    EXPECT_EQ(p[0], 7u);
+    EXPECT_EQ(p[2], 9u);
 }
