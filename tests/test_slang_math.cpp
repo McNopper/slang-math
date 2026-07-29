@@ -21,19 +21,19 @@ static bool near(const float4& a, const float4& b, float eps = kEps) {
     return near(a.x, b.x, eps) && near(a.y, b.y, eps) && near(a.z, b.z, eps) && near(a.w, b.w, eps);
 }
 static bool near(const float4x4& a, const float4x4& b, float eps = kEps) {
-    for (int c = 0; c < 4; ++c)
+    for (std::int32_t c = 0; c < 4; ++c)
         if (!near(a[c], b[c], eps))
             return false;
     return true;
 }
 static bool near(const float2x2& a, const float2x2& b, float eps = kEps) {
-    for (int r = 0; r < 2; ++r)
+    for (std::int32_t r = 0; r < 2; ++r)
         if (!near(a[r], b[r], eps))
             return false;
     return true;
 }
 static bool near(const float3x3& a, const float3x3& b, float eps = kEps) {
-    for (int r = 0; r < 3; ++r)
+    for (std::int32_t r = 0; r < 3; ++r)
         if (!near(a[r], b[r], eps))
             return false;
     return true;
@@ -95,8 +95,8 @@ TEST(Float4, FromFloat3) {
 
 TEST(Float4x4, IdentityDiagonal) {
     float4x4 m{1.f};
-    for (int row = 0; row < 4; ++row)
-        for (int col = 0; col < 4; ++col)
+    for (std::int32_t row = 0; row < 4; ++row)
+        for (std::int32_t col = 0; col < 4; ++col)
             EXPECT_EQ(m[row][col], (row == col) ? 1.f : 0.f);
 }
 
@@ -123,8 +123,8 @@ TEST(Float4x4, Transpose) {
     };
     float4x4 t = transpose(m);
     // t[row][col] = m[col][row]  (row-major indexing, same formula as column-major)
-    for (int r = 0; r < 4; ++r)
-        for (int c = 0; c < 4; ++c)
+    for (std::int32_t r = 0; r < 4; ++r)
+        for (std::int32_t c = 0; c < 4; ++c)
             EXPECT_EQ(t[r][c], m[c][r]);
 }
 
@@ -476,8 +476,8 @@ TEST(Uint4, BasicArithmetic) {
 
 TEST(Float2x2, Identity) {
     float2x2 id{1.f};
-    for (int r = 0; r < 2; ++r)
-        for (int c = 0; c < 2; ++c)
+    for (std::int32_t r = 0; r < 2; ++r)
+        for (std::int32_t c = 0; c < 2; ++c)
             EXPECT_EQ(id[r][c], (r == c) ? 1.f : 0.f);
     EXPECT_EQ(identity<float2x2>(), id);
 }
