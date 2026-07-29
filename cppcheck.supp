@@ -22,11 +22,10 @@ unmatchedSuppression
 # though consumers call them. Only relevant to the exhaustive profile.
 unusedFunction
 
-# slang-math vector/matrix types index their contiguous members via
-# `(&x)[i]` (e.g. operator[]) to mirror Slang/HLSL element access and to
-# feed value_ptr() buffer uploads. cppcheck's objectIndex flags this as
-# pointer arithmetic on a non-array object; the layout (x, y, z, ... with no
-# padding) is a documented, intentional contract of every vector type, so the
-# finding is a false positive here. (clang-tidy's analogous ArrayBound finding
-# is suppressed for test TUs via tests/.clang-tidy.)
+# `(&x)[i]`-style contiguous-member indexing is used deliberately by the
+# slang-math vector/matrix types to mirror Slang/HLSL element access and feed
+# value_ptr() buffer uploads; the tightly-packed, no-padding layout is a
+# documented contract of every vector type. objectIndex flags it as pointer
+# arithmetic on a non-array object — a false positive here that recurs in every
+# consumer. (clang-tidy's analogous ArrayBound finding is disabled in .clang-tidy.)
 objectIndex

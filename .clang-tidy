@@ -23,6 +23,14 @@
 #   * bugprone-exception-escape              - pervasive false positive
 #                                              (iostreams in main() may
 #                                              "throw" from the platform STL)
+#   * clang-analyzer-security.ArrayBound     - flags slang-math's intentional
+#                                              `(&x)[i]` contiguous-member
+#                                              indexing (documented, works on
+#                                              every target toolchain) in every
+#                                              consumer; high false-positive,
+#                                              low yield in this Vulkan codebase.
+#                                              All other clang-analyzer checks
+#                                              stay on.
 #
 # Headers use traditional include guards (not #pragma once), so
 # portability-avoid-pragma-once is left ENABLED as a warning.
@@ -33,6 +41,7 @@ Checks: >
   -*,
   clang-diagnostic-*,
   clang-analyzer-*,
+  -clang-analyzer-security.ArrayBound,
   bugprone-*,
   performance-*,
   portability-*,
