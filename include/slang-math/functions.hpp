@@ -16,6 +16,8 @@
 
 namespace sm {
 
+constexpr float kSingularEpsilon = 1e-10f;
+
 // ── Concepts ──────────────────────────────────────────────────────────────────
 //
 // The concrete types mirror Slang/HLSL. These concepts let the free functions be
@@ -50,13 +52,10 @@ concept square_mat = requires(M m, const M cm, std::int32_t i, std::int32_t j) {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-/// pi<float>() / pi<double>() — the mathematical constant pi.
+/// pi<float>() — the mathematical constant pi.
 template <typename T> [[nodiscard]] constexpr T pi() noexcept;
 template <> [[nodiscard]] inline constexpr float pi<float>() noexcept {
     return std::numbers::pi_v<float>;
-}
-template <> [[nodiscard]] inline constexpr double pi<double>() noexcept {
-    return std::numbers::pi_v<double>;
 }
 
 // ── Angle conversion ──────────────────────────────────────────────────────────
@@ -255,7 +254,7 @@ template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, c
 /// 2×2 inverse via closed form.  Returns identity on a singular matrix.
 [[nodiscard]] inline float2x2 inverse(const float2x2& m) noexcept {
     const float det = determinant(m);
-    if (std::abs(det) < 1e-10f)
+    if (std::abs(det) < kSingularEpsilon)
         return float2x2::identity();
     const float inv = 1.f / det;
     // [[a b],[c d]]⁻¹ = (1/det) [[d -b],[-c a]]
@@ -279,8 +278,8 @@ template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, c
     const float d = m[1][0], e = m[1][1], f = m[1][2];
     const float g = m[2][0], h = m[2][1], k = m[2][2];
 
-    const float det = a * (e * k - f * h) - b * (d * k - f * g) + c * (d * h - e * g);
-    if (std::abs(det) < 1e-10f)
+    const float det = determinant(m);
+    if (std::abs(det) < kSingularEpsilon)
         return float3x3::identity();
     const float inv = 1.f / det;
 
@@ -313,7 +312,7 @@ template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, c
                 std::swap(aug[col][k], aug[pivot][k]);
         }
         const float diag = aug[col][col];
-        if (std::abs(diag) < 1e-10f)
+        if (std::abs(diag) < kSingularEpsilon)
             return float4x4::identity();
         const float invDiag = 1.f / diag;
         for (std::int32_t k = 0; k < 8; ++k)

@@ -8,6 +8,8 @@
 
 namespace sm {
 
+constexpr float kSlerpParallelThreshold = 0.9995f;
+
 /// Unit quaternion for 3D rotations.
 ///
 /// Storage order: x, y, z, w.
@@ -97,7 +99,7 @@ struct quaternion {
         cosTheta = -cosTheta;
     }
     // Nearly parallel — normalized lerp avoids division by ~0.
-    if (cosTheta > 0.9995f) {
+    if (cosTheta > kSlerpParallelThreshold) {
         return normalize(quaternion{
             a.x + t * (b.x - a.x),
             a.y + t * (b.y - a.y),
