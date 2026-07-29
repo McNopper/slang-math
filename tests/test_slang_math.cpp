@@ -566,7 +566,7 @@ TEST(UintFunctions, MinMaxClampDotValuePtr) {
     EXPECT_EQ((clamp(uint3{0, 9, 4}, 1u, 5u)), (uint3{1, 5, 4}));
     EXPECT_EQ(dot(uint3{1, 2, 3}, uint3{4, 5, 6}), 1u * 4 + 2u * 5 + 3u * 6);
     uint3 v{7, 8, 9};
-    const uint32_t* p = value_ptr(v);
+    const std::uint32_t* p = value_ptr(v);
     EXPECT_EQ(p[0], 7u);
     EXPECT_EQ(p[2], 9u);
 }
