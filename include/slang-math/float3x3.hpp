@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_FLOAT3X3_HPP
+#define SLANG_MATH_FLOAT3X3_HPP
 
 #include "float3.hpp"
 
@@ -45,3 +46,4 @@ struct float3x3 {
 };
 
 } // namespace sm
+#endif // SLANG_MATH_FLOAT3X3_HPP

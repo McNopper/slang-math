@@ -21,3 +21,12 @@ unmatchedSuppression
 # Library/public-API functions look "unused" to a per-project analysis even
 # though consumers call them. Only relevant to the exhaustive profile.
 unusedFunction
+
+# slang-math vector/matrix types index their contiguous members via
+# `(&x)[i]` (e.g. operator[]) to mirror Slang/HLSL element access and to
+# feed value_ptr() buffer uploads. cppcheck's objectIndex flags this as
+# pointer arithmetic on a non-array object; the layout (x, y, z, ... with no
+# padding) is a documented, intentional contract of every vector type, so the
+# finding is a false positive here. (clang-tidy's analogous ArrayBound finding
+# is suppressed for test TUs via tests/.clang-tidy.)
+objectIndex

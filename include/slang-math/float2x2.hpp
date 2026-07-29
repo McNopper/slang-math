@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_FLOAT2X2_HPP
+#define SLANG_MATH_FLOAT2X2_HPP
 
 #include "float2.hpp"
 
@@ -41,3 +42,4 @@ struct float2x2 {
 };
 
 } // namespace sm
+#endif // SLANG_MATH_FLOAT2X2_HPP

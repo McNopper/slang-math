@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_FLOAT4X4_HPP
+#define SLANG_MATH_FLOAT4X4_HPP
 
 #include "float4.hpp"
 
@@ -74,3 +75,4 @@ struct float4x4 {
 }
 
 } // namespace sm
+#endif // SLANG_MATH_FLOAT4X4_HPP

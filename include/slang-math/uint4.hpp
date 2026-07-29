@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_UINT4_HPP
+#define SLANG_MATH_UINT4_HPP
 
 #include <cstdint>
 
@@ -34,3 +35,4 @@ struct uint4 {
 };
 
 } // namespace sm
+#endif // SLANG_MATH_UINT4_HPP

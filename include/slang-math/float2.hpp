@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_FLOAT2_HPP
+#define SLANG_MATH_FLOAT2_HPP
 
 #include <cstdint>
 
@@ -71,3 +72,4 @@ struct float2 {
 }
 
 } // namespace sm
+#endif // SLANG_MATH_FLOAT2_HPP

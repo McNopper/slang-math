@@ -53,16 +53,10 @@ set(CPPCHECK_COMMON_ARGS
     -i${CMAKE_SOURCE_DIR}/_deps
     -i${CMAKE_SOURCE_DIR}/external
     -i${CMAKE_SOURCE_DIR}/third_party
-
-    # GoogleTest's macros are not fully expandable by cppcheck's own parser
-    # and yield spurious syntaxError noise; tests are covered by clang-tidy.
-    -i${CMAKE_SOURCE_DIR}/tests
 )
 
 # Opt-in exhaustive profile (style + inconclusive). Kept off the default path
-# so speculative findings never block an agent's build/verify loop. tests/ are
-# excluded here too: GoogleTest macros are not fully expandable by cppcheck's
-# parser and yield spurious syntaxError noise (tests stay covered by clang-tidy).
+# so speculative findings never block an agent's build/verify loop.
 set(CPPCHECK_STRICT_ARGS
     --std=c++23
     --enable=all
@@ -80,8 +74,17 @@ set(CPPCHECK_STRICT_ARGS
     -i${CMAKE_SOURCE_DIR}/_deps
     -i${CMAKE_SOURCE_DIR}/external
     -i${CMAKE_SOURCE_DIR}/third_party
-    -i${CMAKE_SOURCE_DIR}/tests
 )
+
+# Exclude test TUs when there is first-party src/ to analyse. For a header-only
+# library (no src/) the test driver is the only translation unit, so excluding
+# it would leave cppcheck with nothing to check. (cppcheck handles GoogleTest
+# macros cleanly on modern versions; the exclusion is to keep findings focused
+# on production code where a src/ tree exists.)
+if(EXISTS "${CMAKE_SOURCE_DIR}/src")
+    list(APPEND CPPCHECK_COMMON_ARGS -i${CMAKE_SOURCE_DIR}/tests)
+    list(APPEND CPPCHECK_STRICT_ARGS -i${CMAKE_SOURCE_DIR}/tests)
+endif()
 
 add_custom_target(cppcheck
     COMMAND ${CPPCHECK_EXE}

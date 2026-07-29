@@ -14,8 +14,9 @@
 #   * bugprone-exception-escape              - pervasive false positive
 #                                              (iostreams in main() may
 #                                              "throw" from the platform STL)
-#   * portability-avoid-pragma-once          - some repos use #pragma once
-#                                              by design
+#
+# Headers use traditional include guards (not #pragma once), so
+# portability-avoid-pragma-once is left ENABLED as a warning.
 #
 # NOTE: comments must stay OUTSIDE the folded "Checks:" scalar below, or they
 # become part of the value and silently break the check list.
@@ -29,8 +30,7 @@ Checks: >
   modernize-*,
   -modernize-use-trailing-return-type,
   -bugprone-easily-swappable-parameters,
-  -bugprone-exception-escape,
-  -portability-avoid-pragma-once
+  -bugprone-exception-escape
 
 # Only correctness-oriented findings fail the build. Modernization stays a
 # warning so AI-generated code is guided, not blocked.

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_FUNCTIONS_HPP
+#define SLANG_MATH_FUNCTIONS_HPP
 
 #include <algorithm>
 #include <cmath>
@@ -380,3 +381,4 @@ template <square_mat M> [[nodiscard]] inline float* value_ptr(M& m) noexcept {
 }
 
 } // namespace sm
+#endif // SLANG_MATH_FUNCTIONS_HPP

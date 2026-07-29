@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_TRANSFORM_HPP
+#define SLANG_MATH_TRANSFORM_HPP
 
 #include <cmath>
 
@@ -161,3 +162,4 @@ template <> [[nodiscard]] inline quaternion identity<quaternion>() noexcept {
 }
 
 } // namespace sm
+#endif // SLANG_MATH_TRANSFORM_HPP

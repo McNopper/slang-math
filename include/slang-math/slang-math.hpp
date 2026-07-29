@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_SLANG_MATH_HPP
+#define SLANG_MATH_SLANG_MATH_HPP
 
 /// slang-math — single umbrella header.
 ///
@@ -17,3 +18,4 @@
 #include "uint2.hpp"
 #include "uint3.hpp"
 #include "uint4.hpp"
+#endif // SLANG_MATH_SLANG_MATH_HPP

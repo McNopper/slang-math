@@ -1,4 +1,5 @@
-#pragma once
+#ifndef SLANG_MATH_QUATERNION_HPP
+#define SLANG_MATH_QUATERNION_HPP
 
 #include <cmath>
 
@@ -117,3 +118,4 @@ struct quaternion {
 }
 
 } // namespace sm
+#endif // SLANG_MATH_QUATERNION_HPP
