@@ -1,17 +1,17 @@
 #pragma once
 
-#include "float2.hpp"
-#include "float3.hpp"
-#include "float4.hpp"
-#include "float2x2.hpp"
-#include "float3x3.hpp"
-#include "float4x4.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <concepts>
 #include <cstdint>
 #include <numbers>
+
+#include "float2.hpp"
+#include "float2x2.hpp"
+#include "float3.hpp"
+#include "float3x3.hpp"
+#include "float4.hpp"
+#include "float4x4.hpp"
 
 namespace sm {
 
@@ -31,44 +31,48 @@ namespace sm {
 //   square_mat — the row-major float square matrices (float2x2/3x3/4x4). Matrices
 //                are float-only by design; an integer-matrix set is not planned.
 
-template<typename V>
+template <typename V>
 concept vec = requires(V v, const V cv, std::int32_t i) {
     typename V::value_type;
-    { v[i] }  -> std::same_as<typename V::value_type&>;
+    { v[i] } -> std::same_as<typename V::value_type&>;
     { cv[i] } -> std::same_as<const typename V::value_type&>;
-} && std::default_initializable<V>
-  && std::integral<decltype(V::size)>
-  && requires { V::size > 0; };
+} && std::default_initializable<V> && std::integral<decltype(V::size)> && requires { V::size > 0; };
 
-template<typename V>
+template <typename V>
 concept float_vec = vec<V> && std::same_as<typename V::value_type, float>;
 
-template<typename M>
+template <typename M>
 concept square_mat = requires(M m, const M cm, std::int32_t i, std::int32_t j) {
-    { m[i][j] }  -> std::same_as<float&>;
+    { m[i][j] } -> std::same_as<float&>;
     { cm[i][j] } -> std::same_as<const float&>;
-} && std::default_initializable<M>
-  && std::integral<decltype(M::size)>
-  && requires { M::size > 0; };
+} && std::default_initializable<M> && std::integral<decltype(M::size)> && requires { M::size > 0; };
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 /// pi<float>() / pi<double>() — the mathematical constant pi.
-template<typename T> [[nodiscard]] constexpr T pi() noexcept;
-template<> [[nodiscard]] inline constexpr float  pi<float>()  noexcept { return std::numbers::pi_v<float>; }
-template<> [[nodiscard]] inline constexpr double pi<double>() noexcept { return std::numbers::pi_v<double>; }
+template <typename T> [[nodiscard]] constexpr T pi() noexcept;
+template <> [[nodiscard]] inline constexpr float pi<float>() noexcept {
+    return std::numbers::pi_v<float>;
+}
+template <> [[nodiscard]] inline constexpr double pi<double>() noexcept {
+    return std::numbers::pi_v<double>;
+}
 
 // ── Angle conversion ──────────────────────────────────────────────────────────
 
-[[nodiscard]] inline float radians(float deg) noexcept { return deg * (pi<float>() / 180.f); }
-[[nodiscard]] inline float degrees(float rad) noexcept { return rad * (180.f / pi<float>()); }
+[[nodiscard]] inline float radians(float deg) noexcept {
+    return deg * (pi<float>() / 180.f);
+}
+[[nodiscard]] inline float degrees(float rad) noexcept {
+    return rad * (180.f / pi<float>());
+}
 
 // ── Dot product (element-generic) ─────────────────────────────────────────────
 
-template<vec V>
-[[nodiscard]] inline constexpr typename V::value_type dot(const V& a, const V& b) noexcept {
+template <vec V> [[nodiscard]] inline constexpr typename V::value_type dot(const V& a, const V& b) noexcept {
     typename V::value_type s{};
-    for (std::int32_t i = 0; i < V::size; ++i) s += a[i] * b[i];
+    for (std::int32_t i = 0; i < V::size; ++i)
+        s += a[i] * b[i];
     return s;
 }
 
@@ -84,31 +88,32 @@ template<vec V>
 
 // ── Length / Normalize (real-valued only) ─────────────────────────────────────
 
-template<float_vec V>
-[[nodiscard]] inline float length(const V& v) noexcept { return std::sqrt(dot(v, v)); }
+template <float_vec V> [[nodiscard]] inline float length(const V& v) noexcept {
+    return std::sqrt(dot(v, v));
+}
 
-template<float_vec V>
-[[nodiscard]] inline V normalize(const V& v) noexcept {
+template <float_vec V> [[nodiscard]] inline V normalize(const V& v) noexcept {
     const float len = length(v);
     V r{};
     if (len > 0.f)
-        for (std::int32_t i = 0; i < V::size; ++i) r[i] = v[i] / len;
+        for (std::int32_t i = 0; i < V::size; ++i)
+            r[i] = v[i] / len;
     return r;
 }
 
 // ── Component-wise min / max (element-generic) ────────────────────────────────
 
-template<vec V>
-[[nodiscard]] inline constexpr V min(const V& a, const V& b) noexcept {
+template <vec V> [[nodiscard]] inline constexpr V min(const V& a, const V& b) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::min(a[i], b[i]);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::min(a[i], b[i]);
     return r;
 }
 
-template<vec V>
-[[nodiscard]] inline constexpr V max(const V& a, const V& b) noexcept {
+template <vec V> [[nodiscard]] inline constexpr V max(const V& a, const V& b) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::max(a[i], b[i]);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::max(a[i], b[i]);
     return r;
 }
 
@@ -117,63 +122,79 @@ template<vec V>
 [[nodiscard]] inline constexpr float clamp(float v, float lo, float hi) noexcept {
     return std::clamp(v, lo, hi);
 }
-template<vec V>
-[[nodiscard]] inline constexpr V clamp(const V& v,
-                                       typename V::value_type lo,
-                                       typename V::value_type hi) noexcept {
+template <vec V>
+[[nodiscard]] inline constexpr V clamp(const V& v, typename V::value_type lo, typename V::value_type hi) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::clamp(v[i], lo, hi);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::clamp(v[i], lo, hi);
     return r;
 }
-template<vec V>
-[[nodiscard]] inline constexpr V clamp(const V& v, const V& lo, const V& hi) noexcept {
+template <vec V> [[nodiscard]] inline constexpr V clamp(const V& v, const V& lo, const V& hi) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::clamp(v[i], lo[i], hi[i]);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::clamp(v[i], lo[i], hi[i]);
     return r;
 }
 
 // ── Lerp (linear interpolation) — canonical Slang/HLSL name ─────────────────────
 
-[[nodiscard]] inline constexpr float  lerp(float  a, float  b, float t) noexcept { return a + t * (b - a); }
-template<float_vec V>
-[[nodiscard]] inline constexpr V lerp(const V& a, const V& b, float t) noexcept {
+[[nodiscard]] inline constexpr float lerp(float a, float b, float t) noexcept {
+    return a + t * (b - a);
+}
+template <float_vec V> [[nodiscard]] inline constexpr V lerp(const V& a, const V& b, float t) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = a[i] + t * (b[i] - a[i]);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = a[i] + t * (b[i] - a[i]);
     return r;
 }
 /// Component-wise lerp with a per-component weight.
-template<float_vec V>
-[[nodiscard]] inline constexpr V lerp(const V& a, const V& b, const V& t) noexcept {
+template <float_vec V> [[nodiscard]] inline constexpr V lerp(const V& a, const V& b, const V& t) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = a[i] + t[i] * (b[i] - a[i]);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = a[i] + t[i] * (b[i] - a[i]);
     return r;
 }
 
 // ── Abs (real-valued only) ────────────────────────────────────────────────────
 
-template<float_vec V>
-[[nodiscard]] inline V abs(const V& v) noexcept {
+template <float_vec V> [[nodiscard]] inline V abs(const V& v) noexcept {
     V r{};
-    for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::abs(v[i]);
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::abs(v[i]);
     return r;
 }
 
 // ── Component-wise elementary functions (real-valued only) ─────────────────────
 
-template<float_vec V> [[nodiscard]] inline V sqrt(const V& v) noexcept {
-    V r{}; for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::sqrt(v[i]); return r;
+template <float_vec V> [[nodiscard]] inline V sqrt(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::sqrt(v[i]);
+    return r;
 }
-template<float_vec V> [[nodiscard]] inline V exp(const V& v) noexcept {
-    V r{}; for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::exp(v[i]); return r;
+template <float_vec V> [[nodiscard]] inline V exp(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::exp(v[i]);
+    return r;
 }
-template<float_vec V> [[nodiscard]] inline V cos(const V& v) noexcept {
-    V r{}; for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::cos(v[i]); return r;
+template <float_vec V> [[nodiscard]] inline V cos(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::cos(v[i]);
+    return r;
 }
-template<float_vec V> [[nodiscard]] inline V log(const V& v) noexcept {
-    V r{}; for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::log(v[i]); return r;
+template <float_vec V> [[nodiscard]] inline V log(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::log(v[i]);
+    return r;
 }
-template<float_vec V> [[nodiscard]] inline V pow(const V& v, float p) noexcept {
-    V r{}; for (std::int32_t i = 0; i < V::size; ++i) r[i] = std::pow(v[i], p); return r;
+template <float_vec V> [[nodiscard]] inline V pow(const V& v, float p) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::pow(v[i], p);
+    return r;
 }
 
 // ── Smooth-step (scalar) ───────────────────────────────────────────────────────
@@ -186,22 +207,19 @@ template<float_vec V> [[nodiscard]] inline V pow(const V& v, float p) noexcept {
 
 // ── Distance / Reflect (real-valued only) ─────────────────────────────────────
 
-template<float_vec V>
-[[nodiscard]] inline float distance(const V& a, const V& b) noexcept {
+template <float_vec V> [[nodiscard]] inline float distance(const V& a, const V& b) noexcept {
     return length(b - a);
 }
 
 /// Reflect incident vector `i` about unit normal `n`:  i - 2*dot(i,n)*n
-template<float_vec V>
-[[nodiscard]] inline constexpr V reflect(const V& i, const V& n) noexcept {
+template <float_vec V> [[nodiscard]] inline constexpr V reflect(const V& i, const V& n) noexcept {
     return i - 2.f * dot(i, n) * n;
 }
 
 // ── Matrix operations ─────────────────────────────────────────────────────────
 
 /// Transpose — generic over all row-major square matrices.
-template<square_mat M>
-[[nodiscard]] inline constexpr M transpose(const M& m) noexcept {
+template <square_mat M> [[nodiscard]] inline constexpr M transpose(const M& m) noexcept {
     M r{};
     for (std::int32_t i = 0; i < M::size; ++i)
         for (std::int32_t j = 0; j < M::size; ++j)
@@ -211,13 +229,13 @@ template<square_mat M>
 
 /// Matrix × matrix multiply — generic over all row-major square matrices.
 /// `result[i][j] = Σ_k a[i][k] * b[k][j]`.
-template<square_mat M>
-[[nodiscard]] inline constexpr M operator*(const M& a, const M& b) noexcept {
+template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, const M& b) noexcept {
     M r{};
     for (std::int32_t i = 0; i < M::size; ++i)
         for (std::int32_t j = 0; j < M::size; ++j) {
             float s = 0.f;
-            for (std::int32_t k = 0; k < M::size; ++k) s += a[i][k] * b[k][j];
+            for (std::int32_t k = 0; k < M::size; ++k)
+                s += a[i][k] * b[k][j];
             r[i][j] = s;
         }
     return r;
@@ -230,18 +248,19 @@ template<square_mat M>
 
 /// 2×2 determinant.
 [[nodiscard]] inline constexpr float determinant(const float2x2& m) noexcept {
-    return m[0][0]*m[1][1] - m[0][1]*m[1][0];
+    return m[0][0] * m[1][1] - m[0][1] * m[1][0];
 }
 
 /// 2×2 inverse via closed form.  Returns identity on a singular matrix.
 [[nodiscard]] inline float2x2 inverse(const float2x2& m) noexcept {
     const float det = determinant(m);
-    if (std::abs(det) < 1e-10f) return float2x2::identity();
+    if (std::abs(det) < 1e-10f)
+        return float2x2::identity();
     const float inv = 1.f / det;
     // [[a b],[c d]]⁻¹ = (1/det) [[d -b],[-c a]]
     return {
-        {  inv * m[1][1], -inv * m[0][1] },
-        { -inv * m[1][0],  inv * m[0][0] },
+        {inv * m[1][1], -inv * m[0][1]},
+        {-inv * m[1][0], inv * m[0][0]},
     };
 }
 
@@ -250,7 +269,7 @@ template<square_mat M>
     const float a = m[0][0], b = m[0][1], c = m[0][2];
     const float d = m[1][0], e = m[1][1], f = m[1][2];
     const float g = m[2][0], h = m[2][1], k = m[2][2];
-    return a*(e*k - f*h) - b*(d*k - f*g) + c*(d*h - e*g);
+    return a * (e * k - f * h) - b * (d * k - f * g) + c * (d * h - e * g);
 }
 
 /// 3×3 matrix inverse via Cramer's rule.  Returns identity on a singular matrix.
@@ -259,14 +278,15 @@ template<square_mat M>
     const float d = m[1][0], e = m[1][1], f = m[1][2];
     const float g = m[2][0], h = m[2][1], k = m[2][2];
 
-    const float det = a*(e*k - f*h) - b*(d*k - f*g) + c*(d*h - e*g);
-    if (std::abs(det) < 1e-10f) return float3x3::identity();
+    const float det = a * (e * k - f * h) - b * (d * k - f * g) + c * (d * h - e * g);
+    if (std::abs(det) < 1e-10f)
+        return float3x3::identity();
     const float inv = 1.f / det;
 
     return {
-        {  inv*(e*k-f*h), -inv*(b*k-c*h),  inv*(b*f-c*e) },
-        { -inv*(d*k-f*g),  inv*(a*k-c*g), -inv*(a*f-c*d) },
-        {  inv*(d*h-e*g), -inv*(a*h-b*g),  inv*(a*e-b*d) },
+        {inv * (e * k - f * h), -inv * (b * k - c * h), inv * (b * f - c * e)},
+        {-inv * (d * k - f * g), inv * (a * k - c * g), -inv * (a * f - c * d)},
+        {inv * (d * h - e * g), -inv * (a * h - b * g), inv * (a * e - b * d)},
     };
 }
 
@@ -276,8 +296,8 @@ template<square_mat M>
     float aug[4][8]{};
     for (std::int32_t i = 0; i < 4; ++i) {
         for (std::int32_t j = 0; j < 4; ++j) {
-            aug[i][j]   = m[i][j];
-            aug[i][j+4] = (i == j) ? 1.f : 0.f;
+            aug[i][j] = m[i][j];
+            aug[i][j + 4] = (i == j) ? 1.f : 0.f;
         }
     }
 
@@ -295,12 +315,15 @@ template<square_mat M>
         if (std::abs(diag) < 1e-10f)
             return float4x4::identity();
         const float invDiag = 1.f / diag;
-        for (std::int32_t k = 0; k < 8; ++k) aug[col][k] *= invDiag;
+        for (std::int32_t k = 0; k < 8; ++k)
+            aug[col][k] *= invDiag;
 
         for (std::int32_t row = 0; row < 4; ++row) {
-            if (row == col) continue;
+            if (row == col)
+                continue;
             const float f = aug[row][col];
-            for (std::int32_t k = 0; k < 8; ++k) aug[row][k] -= f * aug[col][k];
+            for (std::int32_t k = 0; k < 8; ++k)
+                aug[row][k] -= f * aug[col][k];
         }
     }
 
@@ -312,8 +335,7 @@ template<square_mat M>
 }
 
 /// Normal matrix = transpose(inverse(M)) — generic over all square matrices.
-template<square_mat M>
-[[nodiscard]] inline M inverseTranspose(const M& m) noexcept {
+template <square_mat M> [[nodiscard]] inline M inverseTranspose(const M& m) noexcept {
     return transpose(inverse(m));
 }
 
@@ -321,12 +343,12 @@ template<square_mat M>
 
 /// Extract the upper-left 2×2 submatrix from a 3×3 matrix.
 [[nodiscard]] inline constexpr float2x2 toFloat2x2(const float3x3& m) noexcept {
-    return { {m[0][0], m[0][1]}, {m[1][0], m[1][1]} };
+    return {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
 }
 
 /// Extract the upper-left 2×2 submatrix from a 4×4 matrix.
 [[nodiscard]] inline constexpr float2x2 toFloat2x2(const float4x4& m) noexcept {
-    return { {m[0][0], m[0][1]}, {m[1][0], m[1][1]} };
+    return {{m[0][0], m[0][1]}, {m[1][0], m[1][1]}};
 }
 
 /// Extract the upper-left 3×3 submatrix from a 4×4 matrix.
@@ -344,13 +366,17 @@ template<square_mat M>
 // value_ptr returns a pointer to the first element — `&v[0]` / `&m[0][0]`.
 // On vectors the pointee is the vector's value_type; on matrices it is float.
 
-template<vec V>
-[[nodiscard]] inline const typename V::value_type* value_ptr(const V& v) noexcept { return &v[0]; }
-template<vec V>
-[[nodiscard]] inline typename V::value_type*       value_ptr(V& v)       noexcept { return &v[0]; }
-template<square_mat M>
-[[nodiscard]] inline const float* value_ptr(const M& m) noexcept { return &m[0][0]; }
-template<square_mat M>
-[[nodiscard]] inline float*       value_ptr(M& m)       noexcept { return &m[0][0]; }
+template <vec V> [[nodiscard]] inline const typename V::value_type* value_ptr(const V& v) noexcept {
+    return &v[0];
+}
+template <vec V> [[nodiscard]] inline typename V::value_type* value_ptr(V& v) noexcept {
+    return &v[0];
+}
+template <square_mat M> [[nodiscard]] inline const float* value_ptr(const M& m) noexcept {
+    return &m[0][0];
+}
+template <square_mat M> [[nodiscard]] inline float* value_ptr(M& m) noexcept {
+    return &m[0][0];
+}
 
 } // namespace sm

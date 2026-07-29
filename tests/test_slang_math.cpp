@@ -1,7 +1,6 @@
-#include <slang-math/slang-math.hpp>
-
 #include <cmath>
 #include <gtest/gtest.h>
+#include <slang-math/slang-math.hpp>
 
 using namespace sm;
 
@@ -9,7 +8,9 @@ using namespace sm;
 
 static constexpr float kEps = 1e-5f;
 
-static bool near(float a, float b, float eps = kEps) { return std::abs(a - b) <= eps; }
+static bool near(float a, float b, float eps = kEps) {
+    return std::abs(a - b) <= eps;
+}
 static bool near(const float2& a, const float2& b, float eps = kEps) {
     return near(a.x, b.x, eps) && near(a.y, b.y, eps);
 }
@@ -17,22 +18,24 @@ static bool near(const float3& a, const float3& b, float eps = kEps) {
     return near(a.x, b.x, eps) && near(a.y, b.y, eps) && near(a.z, b.z, eps);
 }
 static bool near(const float4& a, const float4& b, float eps = kEps) {
-    return near(a.x, b.x, eps) && near(a.y, b.y, eps) &&
-           near(a.z, b.z, eps) && near(a.w, b.w, eps);
+    return near(a.x, b.x, eps) && near(a.y, b.y, eps) && near(a.z, b.z, eps) && near(a.w, b.w, eps);
 }
 static bool near(const float4x4& a, const float4x4& b, float eps = kEps) {
     for (int c = 0; c < 4; ++c)
-        if (!near(a[c], b[c], eps)) return false;
+        if (!near(a[c], b[c], eps))
+            return false;
     return true;
 }
 static bool near(const float2x2& a, const float2x2& b, float eps = kEps) {
     for (int r = 0; r < 2; ++r)
-        if (!near(a[r], b[r], eps)) return false;
+        if (!near(a[r], b[r], eps))
+            return false;
     return true;
 }
 static bool near(const float3x3& a, const float3x3& b, float eps = kEps) {
     for (int r = 0; r < 3; ++r)
-        if (!near(a[r], b[r], eps)) return false;
+        if (!near(a[r], b[r], eps))
+            return false;
     return true;
 }
 
@@ -45,7 +48,7 @@ TEST(Float2, BasicArithmetic) {
     EXPECT_EQ(a * b, (float2{3, 8}));
     EXPECT_EQ(a * 2.f, (float2{2, 4}));
     EXPECT_EQ(2.f * a, (float2{2, 4}));
-    EXPECT_EQ(-a,      (float2{-1, -2}));
+    EXPECT_EQ(-a, (float2{-1, -2}));
 }
 
 TEST(Float2, Index) {
@@ -67,7 +70,7 @@ TEST(Float3, BasicArithmetic) {
     float3 a{1, 2, 3}, b{4, 5, 6};
     EXPECT_EQ(a + b, (float3{5, 7, 9}));
     EXPECT_EQ(a * 3.f, (float3{3, 6, 9}));
-    EXPECT_EQ(-a,      (float3{-1, -2, -3}));
+    EXPECT_EQ(-a, (float3{-1, -2, -3}));
 }
 
 // ── float4 ───────────────────────────────────────────────────────────────────
@@ -141,8 +144,8 @@ TEST(Float4x4, InverseRoundTrip) {
 TEST(Float4x4, RowMajorLayout) {
     // Memory layout: row0.xyzw, row1.xyzw, row2.xyzw, row3.xyzw
     float4x4 m{
-        {1, 2, 3, 4},    // row 0
-        {5, 6, 7, 8},    // row 1
+        {1, 2, 3, 4}, // row 0
+        {5, 6, 7, 8}, // row 1
         {9, 10, 11, 12},
         {13, 14, 15, 16},
     };
@@ -207,10 +210,10 @@ TEST(Quaternion, AngleAxisY90) {
     // 90-degree rotation about Y: x→z, z→-x
     const float angle = radians(90.f);
     quaternion q = angleAxis(angle, {0, 1, 0});
-    float4x4   m = toFloat4x4(q);
+    float4x4 m = toFloat4x4(q);
     float4 x_col{1, 0, 0, 0};
     float4 result = m * x_col;
-    EXPECT_NEAR(result.x,  0.f, 1e-4f);
+    EXPECT_NEAR(result.x, 0.f, 1e-4f);
     EXPECT_NEAR(result.z, -1.f, 1e-4f); // RH: rotate X 90° about Y gives -Z
 }
 
@@ -237,9 +240,9 @@ TEST(Transform, ScaleVector) {
 TEST(Transform, LookAtBuildsOrthonormalBasis) {
     float4x4 v = lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
     // With row-major storage, rows 0-2 contain the orthonormal camera basis vectors.
-    float3 row0{v[0][0], v[0][1], v[0][2]};  // right
-    float3 row1{v[1][0], v[1][1], v[1][2]};  // up
-    float3 row2{v[2][0], v[2][1], v[2][2]};  // -forward
+    float3 row0{v[0][0], v[0][1], v[0][2]}; // right
+    float3 row1{v[1][0], v[1][1], v[1][2]}; // up
+    float3 row2{v[2][0], v[2][1], v[2][2]}; // -forward
     EXPECT_NEAR(length(row0), 1.f, kEps);
     EXPECT_NEAR(length(row1), 1.f, kEps);
     EXPECT_NEAR(length(row2), 1.f, kEps);
@@ -264,7 +267,7 @@ TEST(Transform, RowVectorShaderConvention) {
     // Verify mul(v, M) == M^T * v (shader convention test).
     // Build a simple non-identity matrix.
     float4x4 m = translate(float4x4{1.f}, {1, 2, 3});
-    float4   v{4, 5, 6, 1};
+    float4 v{4, 5, 6, 1};
     float4 row_result = v * m;
     float4 col_result = transpose(m) * v;
     EXPECT_TRUE(near(row_result, col_result));
@@ -274,7 +277,7 @@ TEST(Transform, RowVectorShaderConvention) {
 
 TEST(InverseProjection, PerspectiveInverseRoundTrip) {
     // inversePerspective must be the exact inverse of perspective.
-    const float4x4 p    = perspective(radians(60.f), 16.f / 9.f, 0.1f, 250.f);
+    const float4x4 p = perspective(radians(60.f), 16.f / 9.f, 0.1f, 250.f);
     const float4x4 pInv = inversePerspective(radians(60.f), 16.f / 9.f, 0.1f, 250.f);
     EXPECT_TRUE(near(p * pInv, float4x4{1.f}, 1e-4f));
     EXPECT_TRUE(near(pInv * p, float4x4{1.f}, 1e-4f));
@@ -283,14 +286,13 @@ TEST(InverseProjection, PerspectiveInverseRoundTrip) {
 TEST(InverseProjection, AnalyticalPerspectiveMatchesGenericInverse) {
     // The analytical inverse must agree with the generic Gauss-Jordan inverse.
     const float4x4 p = perspective(radians(45.f), 1.333f, 0.5f, 500.f);
-    EXPECT_TRUE(near(inversePerspective(radians(45.f), 1.333f, 0.5f, 500.f),
-                     inverse(p), 1e-4f));
+    EXPECT_TRUE(near(inversePerspective(radians(45.f), 1.333f, 0.5f, 500.f), inverse(p), 1e-4f));
 }
 
 TEST(InverseProjection, LookAtInverseRoundTrip) {
     // inverseLookAt must be the exact inverse of lookAt.
     const float3 eye{3, 4, 10}, center{0, 1, 0}, up{0, 1, 0};
-    const float4x4 v    = lookAt(eye, center, up);
+    const float4x4 v = lookAt(eye, center, up);
     const float4x4 vInv = inverseLookAt(eye, center, up);
     EXPECT_TRUE(near(v * vInv, float4x4{1.f}, 1e-4f));
     EXPECT_TRUE(near(vInv * v, float4x4{1.f}, 1e-4f));
@@ -298,8 +300,7 @@ TEST(InverseProjection, LookAtInverseRoundTrip) {
 
 TEST(InverseProjection, AnalyticalLookAtMatchesGenericInverse) {
     const float3 eye{-2, 5, 7}, center{1, 0, -1}, up{0, 1, 0};
-    EXPECT_TRUE(near(inverseLookAt(eye, center, up),
-                     inverse(lookAt(eye, center, up)), 1e-4f));
+    EXPECT_TRUE(near(inverseLookAt(eye, center, up), inverse(lookAt(eye, center, up)), 1e-4f));
 }
 
 TEST(InverseProjection, InvViewProjEqualsProductOfAnalyticalInverses) {
@@ -308,10 +309,10 @@ TEST(InverseProjection, InvViewProjEqualsProductOfAnalyticalInverses) {
     const float3 eye{0, 2, 6}, center{0, 0, 0}, up{0, 1, 0};
     const float4x4 view = lookAt(eye, center, up);
     const float4x4 proj = perspective(radians(50.f), 4.f / 3.f, 0.1f, 100.f);
-    const float4x4 vp   = proj * view;
-    const float4x4 invVpGeneric    = inverse(vp);
-    const float4x4 invVpAnalytical = inverseLookAt(eye, center, up) *
-                                     inversePerspective(radians(50.f), 4.f / 3.f, 0.1f, 100.f);
+    const float4x4 vp = proj * view;
+    const float4x4 invVpGeneric = inverse(vp);
+    const float4x4 invVpAnalytical =
+        inverseLookAt(eye, center, up) * inversePerspective(radians(50.f), 4.f / 3.f, 0.1f, 100.f);
     EXPECT_TRUE(near(invVpGeneric, invVpAnalytical, 1e-3f));
     EXPECT_TRUE(near(vp * invVpGeneric, float4x4{1.f}, 1e-4f));
 }
@@ -319,19 +320,17 @@ TEST(InverseProjection, InvViewProjEqualsProductOfAnalyticalInverses) {
 // Replicate the shader's background-reprojection math (motion_vector.comp.slang):
 // reconstruct the world-space view ray for a pixel from invViewProj, then project
 // that direction (point at infinity, w=0) through another frame's viewProj.
-static float2 reprojectBackground(const float4x4& invCurViewProj,
-                                  const float4x4& prevViewProj, float2 ndc) {
-    const float4 farW  = invCurViewProj * float4{ndc.x, ndc.y, 1.f, 1.f};
+static float2 reprojectBackground(const float4x4& invCurViewProj, const float4x4& prevViewProj, float2 ndc) {
+    const float4 farW = invCurViewProj * float4{ndc.x, ndc.y, 1.f, 1.f};
     const float4 nearW = invCurViewProj * float4{ndc.x, ndc.y, 0.f, 1.f};
-    const float3 dir   = static_cast<float3>(farW) / farW.w - static_cast<float3>(nearW) / nearW.w;
+    const float3 dir = static_cast<float3>(farW) / farW.w - static_cast<float3>(nearW) / nearW.w;
     const float4 prevClip = prevViewProj * float4{dir, 0.f};
     return {prevClip.x / prevClip.w, prevClip.y / prevClip.w};
 }
 
 TEST(SkyReprojection, StaticCameraGivesZeroMotion) {
     // With prev == cur, a background pixel must reproject to itself (motion ~ 0).
-    const float4x4 vp = perspective(radians(60.f), 16.f / 9.f, 0.1f, 100.f) *
-                        lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
+    const float4x4 vp = perspective(radians(60.f), 16.f / 9.f, 0.1f, 100.f) * lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
     const float4x4 invVp = inverse(vp);
     for (float2 ndc : {float2{0, 0}, float2{0.5f, -0.3f}, float2{-0.8f, 0.6f}}) {
         const float2 prevNdc = reprojectBackground(invVp, vp, ndc);
@@ -343,9 +342,9 @@ TEST(SkyReprojection, CameraRotationGivesFiniteNonZeroMotion) {
     // Rotating the camera between frames must yield a finite, non-zero background
     // motion vector (the sky tracks camera rotation instead of getting MV = 0).
     const float4x4 proj = perspective(radians(60.f), 16.f / 9.f, 0.1f, 100.f);
-    const float4x4 curView  = lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
+    const float4x4 curView = lookAt({0, 0, 5}, {0, 0, 0}, {0, 1, 0});
     const float4x4 prevView = lookAt({0, 0, 5}, {0.5f, 0, 0}, {0, 1, 0}); // yawed
-    const float4x4 curVp  = proj * curView;
+    const float4x4 curVp = proj * curView;
     const float4x4 prevVp = proj * prevView;
     const float2 ndc{0.3f, 0.1f};
     const float2 prevNdc = reprojectBackground(inverse(curVp), prevVp, ndc);
@@ -391,7 +390,7 @@ TEST(QuaternionAlgebra, MultiplyMatchesMatrixComposition) {
 }
 
 TEST(QuaternionAlgebra, SlerpEndpoints) {
-    const quaternion a = angleAxis(radians(0.f),  {0, 1, 0});
+    const quaternion a = angleAxis(radians(0.f), {0, 1, 0});
     const quaternion b = angleAxis(radians(90.f), {0, 1, 0});
     EXPECT_TRUE(near(slerp(a, b, 0.f) * float3{1, 0, 0}, a * float3{1, 0, 0}, 1e-4f));
     EXPECT_TRUE(near(slerp(a, b, 1.f) * float3{1, 0, 0}, b * float3{1, 0, 0}, 1e-4f));
@@ -399,7 +398,7 @@ TEST(QuaternionAlgebra, SlerpEndpoints) {
 
 TEST(QuaternionAlgebra, SlerpMidpointIsHalfAngle) {
     // Halfway between 0° and 90° about Y is a 45° rotation.
-    const quaternion a = angleAxis(radians(0.f),  {0, 1, 0});
+    const quaternion a = angleAxis(radians(0.f), {0, 1, 0});
     const quaternion b = angleAxis(radians(90.f), {0, 1, 0});
     const quaternion mid = slerp(a, b, 0.5f);
     const quaternion expected = angleAxis(radians(45.f), {0, 1, 0});
@@ -444,8 +443,7 @@ TEST(Float2Functions, LerpAbsSqrtPow) {
 
 TEST(Float4Functions, UnaryAndReflectDistance) {
     // Reflect [1,0,0,0] about [1,0,0,0] -> [-1,0,0,0]; dot with forward -> -1.
-    EXPECT_NEAR(dot(reflect(float4{1, 0, 0, 0}, float4{1, 0, 0, 0}),
-                     float4{1, 0, 0, 0}), -1.f, kEps);
+    EXPECT_NEAR(dot(reflect(float4{1, 0, 0, 0}, float4{1, 0, 0, 0}), float4{1, 0, 0, 0}), -1.f, kEps);
     EXPECT_NEAR(distance(float4{0, 0, 0, 0}, float4{0, 3, 4, 0}), 5.f, kEps);
     EXPECT_NEAR(cos(float4{0, 0, 0, 0}).x, 1.f, kEps);
     EXPECT_NEAR(exp(float4{0, 0, 0, 0}).y, 1.f, kEps);
@@ -551,7 +549,7 @@ TEST(GenericMatrix, Float3x3InverseAndInverseTranspose) {
 
 TEST(Concepts, Satisfaction) {
     static_assert(vec<float2> && vec<float3> && vec<float4>);
-    static_assert(vec<uint2>  && vec<uint3>  && vec<uint4>);
+    static_assert(vec<uint2> && vec<uint3> && vec<uint4>);
     static_assert(float_vec<float2> && float_vec<float3> && float_vec<float4>);
     static_assert(!float_vec<uint2> && !float_vec<uint3> && !float_vec<uint4>);
     static_assert(square_mat<float2x2> && square_mat<float3x3> && square_mat<float4x4>);
@@ -566,7 +564,7 @@ TEST(UintFunctions, MinMaxClampDotValuePtr) {
     EXPECT_EQ((min(uint3{1, 8, 3}, uint3{5, 2, 9})), (uint3{1, 2, 3}));
     EXPECT_EQ((max(uint3{1, 8, 3}, uint3{5, 2, 9})), (uint3{5, 8, 9}));
     EXPECT_EQ((clamp(uint3{0, 9, 4}, 1u, 5u)), (uint3{1, 5, 4}));
-    EXPECT_EQ(dot(uint3{1, 2, 3}, uint3{4, 5, 6}), 1u*4 + 2u*5 + 3u*6);
+    EXPECT_EQ(dot(uint3{1, 2, 3}, uint3{4, 5, 6}), 1u * 4 + 2u * 5 + 3u * 6);
     uint3 v{7, 8, 9};
     const uint32_t* p = value_ptr(v);
     EXPECT_EQ(p[0], 7u);

@@ -29,17 +29,45 @@ struct float2 {
     [[nodiscard]] constexpr float2 operator/(float s) const noexcept { return {x / s, y / s}; }
     [[nodiscard]] constexpr float2 operator-() const noexcept { return {-x, -y}; }
 
-    constexpr float2& operator+=(const float2& o) noexcept { x += o.x; y += o.y; return *this; }
-    constexpr float2& operator-=(const float2& o) noexcept { x -= o.x; y -= o.y; return *this; }
-    constexpr float2& operator*=(const float2& o) noexcept { x *= o.x; y *= o.y; return *this; }
-    constexpr float2& operator/=(const float2& o) noexcept { x /= o.x; y /= o.y; return *this; }
-    constexpr float2& operator*=(float s) noexcept { x *= s; y *= s; return *this; }
-    constexpr float2& operator/=(float s) noexcept { x /= s; y /= s; return *this; }
+    constexpr float2& operator+=(const float2& o) noexcept {
+        x += o.x;
+        y += o.y;
+        return *this;
+    }
+    constexpr float2& operator-=(const float2& o) noexcept {
+        x -= o.x;
+        y -= o.y;
+        return *this;
+    }
+    constexpr float2& operator*=(const float2& o) noexcept {
+        x *= o.x;
+        y *= o.y;
+        return *this;
+    }
+    constexpr float2& operator/=(const float2& o) noexcept {
+        x /= o.x;
+        y /= o.y;
+        return *this;
+    }
+    constexpr float2& operator*=(float s) noexcept {
+        x *= s;
+        y *= s;
+        return *this;
+    }
+    constexpr float2& operator/=(float s) noexcept {
+        x /= s;
+        y /= s;
+        return *this;
+    }
 
     [[nodiscard]] constexpr bool operator==(const float2&) const noexcept = default;
 };
 
-[[nodiscard]] inline constexpr float2 operator*(float s, const float2& v) noexcept { return v * s; }
-[[nodiscard]] inline constexpr float2 operator+(float s, const float2& v) noexcept { return v + s; }
+[[nodiscard]] inline constexpr float2 operator*(float s, const float2& v) noexcept {
+    return v * s;
+}
+[[nodiscard]] inline constexpr float2 operator+(float s, const float2& v) noexcept {
+    return v + s;
+}
 
 } // namespace sm
