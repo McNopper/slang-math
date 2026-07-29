@@ -275,48 +275,73 @@ template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, c
     };
 }
 
-/// 4×4 matrix inverse via Gauss-Jordan elimination with partial pivoting.
-/// Returns identity on a singular matrix.
-[[nodiscard]] inline float4x4 inverse(const float4x4& m) noexcept {
-    float aug[4][8]{};
-    for (std::int32_t i = 0; i < 4; ++i) {
+namespace detail {
+
+struct AugmentedMatrix {
+    float rows[4][8]{};
+};
+
+[[nodiscard]] inline constexpr AugmentedMatrix buildAugmented(const float4x4& m) noexcept {
+    AugmentedMatrix aug{};
+    for (std::int32_t i = 0; i < 4; ++i)
         for (std::int32_t j = 0; j < 4; ++j) {
-            aug[i][j] = m[i][j];
-            aug[i][j + 4] = (i == j) ? 1.f : 0.f;
+            aug.rows[i][j] = m[i][j];
+            aug.rows[i][j + 4] = (i == j) ? 1.f : 0.f;
         }
-    }
+    return aug;
+}
 
-    for (std::int32_t col = 0; col < 4; ++col) {
-        std::int32_t pivot = col;
-        for (std::int32_t row = col + 1; row < 4; ++row) {
-            if (std::abs(aug[row][col]) > std::abs(aug[pivot][col]))
-                pivot = row;
-        }
-        if (pivot != col) {
-            for (std::int32_t k = 0; k < 8; ++k)
-                std::swap(aug[col][k], aug[pivot][k]);
-        }
-        const float diag = aug[col][col];
-        if (std::abs(diag) < kSingularEpsilon)
-            return float4x4::identity();
-        const float invDiag = 1.f / diag;
+[[nodiscard]] inline std::int32_t partialPivot(const AugmentedMatrix& aug, std::int32_t col) noexcept {
+    std::int32_t pivot = col;
+    for (std::int32_t row = col + 1; row < 4; ++row)
+        if (std::abs(aug.rows[row][col]) > std::abs(aug.rows[pivot][col]))
+            pivot = row;
+    return pivot;
+}
+
+inline constexpr void normalizePivotRow(AugmentedMatrix& aug, std::int32_t col) noexcept {
+    const float invDiag = 1.f / aug.rows[col][col];
+    for (std::int32_t k = 0; k < 8; ++k)
+        aug.rows[col][k] *= invDiag;
+}
+
+inline constexpr void eliminateRows(AugmentedMatrix& aug, std::int32_t col) noexcept {
+    for (std::int32_t row = 0; row < 4; ++row) {
+        if (row == col)
+            continue;
+        const float f = aug.rows[row][col];
         for (std::int32_t k = 0; k < 8; ++k)
-            aug[col][k] *= invDiag;
-
-        for (std::int32_t row = 0; row < 4; ++row) {
-            if (row == col)
-                continue;
-            const float f = aug[row][col];
-            for (std::int32_t k = 0; k < 8; ++k)
-                aug[row][k] -= f * aug[col][k];
-        }
+            aug.rows[row][k] -= f * aug.rows[col][k];
     }
+}
 
+[[nodiscard]] inline constexpr float4x4 extractRightHalf(const AugmentedMatrix& aug) noexcept {
     float4x4 result;
     for (std::int32_t i = 0; i < 4; ++i)
         for (std::int32_t j = 0; j < 4; ++j)
-            result[i][j] = aug[i][j + 4];
+            result[i][j] = aug.rows[i][j + 4];
     return result;
+}
+
+} // namespace detail
+
+/// 4×4 matrix inverse via Gauss-Jordan elimination with partial pivoting.
+/// Returns identity on a singular matrix.
+[[nodiscard]] inline float4x4 inverse(const float4x4& m) noexcept {
+    detail::AugmentedMatrix aug = detail::buildAugmented(m);
+
+    for (std::int32_t col = 0; col < 4; ++col) {
+        const std::int32_t pivot = detail::partialPivot(aug, col);
+        if (pivot != col)
+            for (std::int32_t k = 0; k < 8; ++k)
+                std::swap(aug.rows[col][k], aug.rows[pivot][k]);
+        if (std::abs(aug.rows[col][col]) < kSingularEpsilon)
+            return float4x4::identity();
+        detail::normalizePivotRow(aug, col);
+        detail::eliminateRows(aug, col);
+    }
+
+    return detail::extractRightHalf(aug);
 }
 
 /// Normal matrix = transpose(inverse(M)) — generic over all square matrices.
