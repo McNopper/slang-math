@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(slang-math VERSION 0.2.0 LANGUAGES CXX)
+project(slang-math VERSION 0.2.1 LANGUAGES CXX)
 
 # Machine-readable compilation database (clang-tidy / cppcheck / editors).
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
