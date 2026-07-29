@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "float3.hpp"
+#include "operators.hpp"
 
 namespace sm {
 
@@ -12,6 +13,9 @@ namespace sm {
 /// Memory layout: x, y, z, w (16 bytes, no padding).
 ///
 /// The r/g/b/a aliases map to x/y/z/w respectively.
+///
+/// Arithmetic operators (+, -, *, /, unary -, and the compound-assignment forms)
+/// are provided generically for every `vec` by operators.hpp.
 struct float4 {
     union {
         struct {
@@ -37,71 +41,10 @@ struct float4 {
     [[nodiscard]] constexpr float& operator[](std::int32_t i) noexcept { return (&x)[i]; }
     [[nodiscard]] constexpr const float& operator[](std::int32_t i) const noexcept { return (&x)[i]; }
 
-    [[nodiscard]] constexpr float4 operator+(const float4& o) const noexcept {
-        return {x + o.x, y + o.y, z + o.z, w + o.w};
-    }
-    [[nodiscard]] constexpr float4 operator-(const float4& o) const noexcept {
-        return {x - o.x, y - o.y, z - o.z, w - o.w};
-    }
-    [[nodiscard]] constexpr float4 operator*(const float4& o) const noexcept {
-        return {x * o.x, y * o.y, z * o.z, w * o.w};
-    }
-    [[nodiscard]] constexpr float4 operator/(const float4& o) const noexcept {
-        return {x / o.x, y / o.y, z / o.z, w / o.w};
-    }
-    [[nodiscard]] constexpr float4 operator+(float s) const noexcept { return {x + s, y + s, z + s, w + s}; }
-    [[nodiscard]] constexpr float4 operator-(float s) const noexcept { return {x - s, y - s, z - s, w - s}; }
-    [[nodiscard]] constexpr float4 operator*(float s) const noexcept { return {x * s, y * s, z * s, w * s}; }
-    [[nodiscard]] constexpr float4 operator/(float s) const noexcept { return {x / s, y / s, z / s, w / s}; }
-    [[nodiscard]] constexpr float4 operator-() const noexcept { return {-x, -y, -z, -w}; }
-
-    constexpr float4& operator+=(const float4& o) noexcept {
-        x += o.x;
-        y += o.y;
-        z += o.z;
-        w += o.w;
-        return *this;
-    }
-    constexpr float4& operator-=(const float4& o) noexcept {
-        x -= o.x;
-        y -= o.y;
-        z -= o.z;
-        w -= o.w;
-        return *this;
-    }
-    constexpr float4& operator*=(const float4& o) noexcept {
-        x *= o.x;
-        y *= o.y;
-        z *= o.z;
-        w *= o.w;
-        return *this;
-    }
-    constexpr float4& operator*=(float s) noexcept {
-        x *= s;
-        y *= s;
-        z *= s;
-        w *= s;
-        return *this;
-    }
-    constexpr float4& operator/=(float s) noexcept {
-        x /= s;
-        y /= s;
-        z /= s;
-        w /= s;
-        return *this;
-    }
-
     [[nodiscard]] constexpr bool operator==(const float4& o) const noexcept {
         return x == o.x && y == o.y && z == o.z && w == o.w;
     }
 };
-
-[[nodiscard]] inline constexpr float4 operator*(float s, const float4& v) noexcept {
-    return v * s;
-}
-[[nodiscard]] inline constexpr float4 operator+(float s, const float4& v) noexcept {
-    return v + s;
-}
 
 } // namespace sm
 #endif // SLANG_MATH_FLOAT4_HPP

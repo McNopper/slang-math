@@ -3,10 +3,16 @@
 
 #include <cstdint>
 
+#include "operators.hpp"
+
 namespace sm {
 
 /// Four-component unsigned integer vector — mirrors Slang/HLSL `uint4`.
 /// Memory layout: x, y, z, w (16 bytes).
+///
+/// Arithmetic operators (+, -, *, unary -, and the compound-assignment forms) are
+/// provided generically for every `vec` by operators.hpp. Division is intentionally
+/// float-only (see float_vec), matching the original uintN behaviour.
 struct uint4 {
     std::uint32_t x{}, y{}, z{}, w{};
 
@@ -20,17 +26,6 @@ struct uint4 {
 
     [[nodiscard]] constexpr std::uint32_t& operator[](std::int32_t i) noexcept { return (&x)[i]; }
     [[nodiscard]] constexpr const std::uint32_t& operator[](std::int32_t i) const noexcept { return (&x)[i]; }
-
-    [[nodiscard]] constexpr uint4 operator+(const uint4& o) const noexcept {
-        return {x + o.x, y + o.y, z + o.z, w + o.w};
-    }
-    [[nodiscard]] constexpr uint4 operator-(const uint4& o) const noexcept {
-        return {x - o.x, y - o.y, z - o.z, w - o.w};
-    }
-    [[nodiscard]] constexpr uint4 operator*(const uint4& o) const noexcept {
-        return {x * o.x, y * o.y, z * o.z, w * o.w};
-    }
-    [[nodiscard]] constexpr uint4 operator*(std::uint32_t s) const noexcept { return {x * s, y * s, z * s, w * s}; }
 
     [[nodiscard]] constexpr bool operator==(const uint4&) const noexcept = default;
 };

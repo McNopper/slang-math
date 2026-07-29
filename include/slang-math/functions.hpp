@@ -13,6 +13,7 @@
 #include "float3x3.hpp"
 #include "float4.hpp"
 #include "float4x4.hpp"
+#include "operators.hpp"
 
 namespace sm {
 
@@ -20,29 +21,13 @@ constexpr float kSingularEpsilon = 1e-10f;
 
 // ── Concepts ──────────────────────────────────────────────────────────────────
 //
-// The concrete types mirror Slang/HLSL. These concepts let the free functions be
-// generic without aliases or surprising overloads, and they state the *full*
-// contract the generic bodies depend on (const + mutable indexing, default
-// construction, a positive integral static size, an element typedef):
+// `vec` and `float_vec` (any / float-only component vectors) live in operators.hpp
+// so every floatN / uintN header can use the generic arithmetic operators without
+// pulling in this file. The square_mat concept is local to the matrix free
+// functions below.
 //
-//   vec        — any component vector (float2/3/4 AND uint2/3/4). Element-agnostic,
-//                so the type-agnostic ops (dot, min, max, clamp, value_ptr) work for
-//                every supported element type, and future scalars (e.g. signed int)
-//                inherit them automatically.
-//   float_vec  — vec whose value_type is float; carries the transcendental /
-//                normalizing ops that only make sense for real numbers.
 //   square_mat — the row-major float square matrices (float2x2/3x3/4x4). Matrices
 //                are float-only by design; an integer-matrix set is not planned.
-
-template <typename V>
-concept vec = requires(V v, const V cv, std::int32_t i) {
-    typename V::value_type;
-    { v[i] } -> std::same_as<typename V::value_type&>;
-    { cv[i] } -> std::same_as<const typename V::value_type&>;
-} && std::default_initializable<V> && std::integral<decltype(V::size)> && requires { V::size > 0; };
-
-template <typename V>
-concept float_vec = vec<V> && std::same_as<typename V::value_type, float>;
 
 template <typename M>
 concept square_mat = requires(M m, const M cm, std::int32_t i, std::int32_t j) {

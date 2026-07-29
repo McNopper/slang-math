@@ -13,6 +13,7 @@
 #include "float4.hpp"
 #include "float4x4.hpp"
 #include "functions.hpp"
+#include "operators.hpp"
 #include "quaternion.hpp"
 #include "transform.hpp"
 #include "uint2.hpp"

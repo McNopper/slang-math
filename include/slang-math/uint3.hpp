@@ -3,10 +3,16 @@
 
 #include <cstdint>
 
+#include "operators.hpp"
+
 namespace sm {
 
 /// Three-component unsigned integer vector — mirrors Slang/HLSL `uint3`.
 /// Memory layout: x, y, z (12 bytes).
+///
+/// Arithmetic operators (+, -, *, unary -, and the compound-assignment forms) are
+/// provided generically for every `vec` by operators.hpp. Division is intentionally
+/// float-only (see float_vec), matching the original uintN behaviour.
 struct uint3 {
     std::uint32_t x{}, y{}, z{};
 
@@ -19,11 +25,6 @@ struct uint3 {
 
     [[nodiscard]] constexpr std::uint32_t& operator[](std::int32_t i) noexcept { return (&x)[i]; }
     [[nodiscard]] constexpr const std::uint32_t& operator[](std::int32_t i) const noexcept { return (&x)[i]; }
-
-    [[nodiscard]] constexpr uint3 operator+(const uint3& o) const noexcept { return {x + o.x, y + o.y, z + o.z}; }
-    [[nodiscard]] constexpr uint3 operator-(const uint3& o) const noexcept { return {x - o.x, y - o.y, z - o.z}; }
-    [[nodiscard]] constexpr uint3 operator*(const uint3& o) const noexcept { return {x * o.x, y * o.y, z * o.z}; }
-    [[nodiscard]] constexpr uint3 operator*(std::uint32_t s) const noexcept { return {x * s, y * s, z * s}; }
 
     [[nodiscard]] constexpr bool operator==(const uint3&) const noexcept = default;
 };

@@ -3,10 +3,16 @@
 
 #include <cstdint>
 
+#include "operators.hpp"
+
 namespace sm {
 
 /// Two-component unsigned integer vector — mirrors Slang/HLSL `uint2`.
 /// Memory layout: x, y (8 bytes).
+///
+/// Arithmetic operators (+, -, *, unary -, and the compound-assignment forms) are
+/// provided generically for every `vec` by operators.hpp. Division is intentionally
+/// float-only (see float_vec), matching the original uintN behaviour.
 struct uint2 {
     std::uint32_t x{}, y{};
 
@@ -19,11 +25,6 @@ struct uint2 {
 
     [[nodiscard]] constexpr std::uint32_t& operator[](std::int32_t i) noexcept { return (&x)[i]; }
     [[nodiscard]] constexpr const std::uint32_t& operator[](std::int32_t i) const noexcept { return (&x)[i]; }
-
-    [[nodiscard]] constexpr uint2 operator+(const uint2& o) const noexcept { return {x + o.x, y + o.y}; }
-    [[nodiscard]] constexpr uint2 operator-(const uint2& o) const noexcept { return {x - o.x, y - o.y}; }
-    [[nodiscard]] constexpr uint2 operator*(const uint2& o) const noexcept { return {x * o.x, y * o.y}; }
-    [[nodiscard]] constexpr uint2 operator*(std::uint32_t s) const noexcept { return {x * s, y * s}; }
 
     [[nodiscard]] constexpr bool operator==(const uint2&) const noexcept = default;
 };
