@@ -87,7 +87,7 @@ TEST(Float4, FromFloat3) {
     float3 v{1, 2, 3};
     float4 w{v, 1.f};
     EXPECT_EQ(w, (float4{1, 2, 3, 1}));
-    float3 back = static_cast<float3>(w);
+    auto back = static_cast<float3>(w);
     EXPECT_EQ(back, v);
 }
 

@@ -1,16 +1,17 @@
 ---
 # Test-only clang-tidy overrides (canonical across the pipeline repos).
 #
-# GoogleTest assertion macros (EXPECT_EQ / ASSERT_*) are built on switch(0) /
-# do-while scaffolding that confuses clang-analyzer's path-sensitive engine,
+# This mirrors the root .clang-tidy profile EXCEPT that clang-analyzer is
+# relaxed: GoogleTest assertion macros (EXPECT_EQ / ASSERT_*) are built on
+# switch(0) / do-while scaffolding that confuses its path-sensitive engine,
 # producing false positives (e.g. security.ArrayBound) on the code paths the
 # macros touch — especially over low-level contiguous-member indexing such as
 # `(&x)[i]` / `value_ptr`. Correctness of the code under test is established
 # by the tests themselves, not by analysing the test driver.
 #
-# clang-analyzer is therefore relaxed for *test* translation units only; the
-# src/ translation units (where the analyzer is most valuable) keep the full
-# root .clang-tidy profile. clang-diagnostic-* and bugprone-* stay errors here.
+# The src/ translation units keep the FULL root profile (clang-analyzer on).
+# clang-diagnostic-* and bugprone-* stay errors here. Keep this list in sync
+# with the root .clang-tidy check subtractions.
 Checks: >
   -*,
   clang-diagnostic-*,
@@ -20,7 +21,9 @@ Checks: >
   performance-*,
   portability-*,
   modernize-*,
-  -modernize-use-trailing-return-type
+  -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-use-default-member-init
 
 WarningsAsErrors: >
   clang-diagnostic-*,

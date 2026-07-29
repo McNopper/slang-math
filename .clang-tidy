@@ -10,6 +10,12 @@
 #
 # Disabled on purpose:
 #   * modernize-use-trailing-return-type     - stylistic, high churn
+#   * modernize-avoid-c-arrays               - subjective; C-arrays are used
+#                                              deliberately (row-major matrix
+#                                              storage mirroring Slang/HLSL)
+#   * modernize-use-default-member-init      - unsatisfiable on anonymous-union
+#                                              colour aliases (x/y/z, r/g/b);
+#                                              explicit ctors already init
 #   * bugprone-easily-swappable-parameters   - noisy, subjective
 #   * bugprone-exception-escape              - pervasive false positive
 #                                              (iostreams in main() may
@@ -29,6 +35,8 @@ Checks: >
   portability-*,
   modernize-*,
   -modernize-use-trailing-return-type,
+  -modernize-avoid-c-arrays,
+  -modernize-use-default-member-init,
   -bugprone-easily-swappable-parameters,
   -bugprone-exception-escape
 
