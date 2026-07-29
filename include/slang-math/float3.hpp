@@ -1,6 +1,8 @@
 #ifndef SLANG_MATH_FLOAT3_HPP
 #define SLANG_MATH_FLOAT3_HPP
 
+#include <cstdint>
+
 #include "float2.hpp"
 
 namespace sm {

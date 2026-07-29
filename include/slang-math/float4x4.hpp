@@ -1,6 +1,8 @@
 #ifndef SLANG_MATH_FLOAT4X4_HPP
 #define SLANG_MATH_FLOAT4X4_HPP
 
+#include <cstdint>
+
 #include "float4.hpp"
 
 namespace sm {

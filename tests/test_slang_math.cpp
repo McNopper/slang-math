@@ -1,4 +1,5 @@
 #include <cmath>
+#include <cstdint>
 #include <gtest/gtest.h>
 #include <slang-math/slang-math.hpp>
 
