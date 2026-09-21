@@ -38,15 +38,15 @@ in the sibling clones.
 
 Close the gap between slang-math and the HLSL/Slang intrinsic vocabulary it mirrors, per this
 repo's "complete, consistent, standalone package" type-set policy (AGENTS.md). Grounded in
-downstream evidence: shader `saturate` has 99 call sites vs ~35 hand-rolled
-`std::clamp(x,0,1)` host sites plus a local `clamp01()`
+downstream evidence: shader `saturate` has 99 call sites vs ~40 hand-rolled
+`std::clamp(x,0,1)` host sites (Harmonia 26, Aether 12, Theia 1) plus a local `clamp01()`
 (`Harmonia/src/harmonia/pipeline/SceneOutputCopyPass.cpp:36`); shader `isfinite` has 29 sites
 and Harmonia carries a dead hand-rolled `Math::isNanOrInf`
 (`Harmonia/src/harmonia/utils/Math.hpp:39`); `cos` is the only trig function shipped, so
 downstream runs per-component `std::sin`/`std::cos`/`std::atan2` code
-(`Theia/src/theia/renderer/CameraController.hpp`, `IblProbe.cpp`, `Light.cpp`); `rsqrt` is
-hand-mirrored as `1/std::sqrt` in three spots (`Hyperion/tests/unit/test_bsdf.cpp:489`,
-`Harmonia/tests/unit/test_math.cpp:71`). Library comparison: glm-parity items are folded into
+(`Theia/src/theia/renderer/CameraController.hpp`, Harmonia's `IblProbe.cpp`/`Light.cpp`);
+`rsqrt` is hand-mirrored as `1/std::sqrt` in two spots (`Hyperion/tests/unit/test_bsdf.cpp:491`,
+`Harmonia/tests/unit/test_math.cpp:73`). Library comparison: glm-parity items are folded into
 SM3/SM4 (`determinant` 4×4, `toQuaternion`, `ortho`, `trs`); DirectXMath's SIMD focus is out
 of scope by design (slang-math is header-only and constexpr-friendly).
 
