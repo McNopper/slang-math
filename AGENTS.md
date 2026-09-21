@@ -2,6 +2,9 @@
 
 Quick-start context for AI agents so basic facts don't have to be rediscovered each session.
 
+**Outstanding work, governance (definition of done + guardrails) and release history: see
+[`PLAN.md`](PLAN.md).**
+
 ## What this repo is
 
 **slang-math** is a standalone, **header-only C++20** math library shared by the four-repo
@@ -20,7 +23,7 @@ flowchart LR
 ```
 
 Consumed via CMake **FetchContent** (`GIT_TAG vX.Y.Z`). Downstream builds override the pin with
-`-DFETCHCONTENT_SOURCE_DIR_SLANG_MATH=C:/Development/GitHub/slang-math` to test local changes
+`-DFETCHCONTENT_SOURCE_DIR_SLANG_MATH=<path-to-slang-math>` to test local changes
 against unpushed tags.
 
 ## Core design decision — row-major storage

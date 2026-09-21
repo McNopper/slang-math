@@ -58,7 +58,9 @@ pack_matrix(row_major)` directive), the CPU and GPU byte layout are identical.  
 | `sm::float3`   | `float3`        | x/y/z + r/g/b aliases (12 bytes)          |
 | `sm::float4`   | `float4`        | x/y/z/w + r/g/b/a aliases (16 bytes)      |
 | `sm::uint2`    | `uint2`         | x, y (8 bytes)                            |
+| `sm::uint3`    | `uint3`         | x, y, z (12 bytes)                        |
 | `sm::uint4`    | `uint4`         | x, y, z, w (16 bytes)                     |
+| `sm::float2x2` | `float2x2`      | Row-major, 2 × float2 (16 bytes)          |
 | `sm::float3x3` | `float3x3`      | Row-major, 3 × float3 (36 bytes)          |
 | `sm::float4x4` | `float4x4`      | Row-major, 4 × float4 (64 bytes)          |
 | `sm::quaternion` | —             | (x, y, z, w) storage; `w` = scalar part   |
@@ -73,18 +75,24 @@ pack_matrix(row_major)` directive), the CPU and GPU byte layout are identical.  
 | `sm::normalize(v)` | Unit vector |
 | `sm::min/max(a, b)` | Component-wise min/max |
 | `sm::clamp(v, lo, hi)` | Component-wise clamp |
-| `sm::lerp(a, b, t)` | Linear interpolation |
+| `sm::lerp(a, b, t)` | Linear interpolation (scalar and vector) |
 | `sm::reflect(i, n)` | Reflection about normal |
-| `sm::radians/degrees(x)` | Angle conversion |
+| `sm::radians/degrees(x)` | Angle conversion (scalar) |
 | `sm::pi<float>()` | π constant |
-| `sm::transpose(m)` | Matrix transpose |
-| `sm::inverse(m)` | Matrix inverse (Gauss-Jordan for 4×4, Cramer for 3×3) |
-| `sm::inverseTranspose(m)` | `transpose(inverse(m))` — normal matrix |
-| `sm::determinant(float3x3)` | 3×3 determinant |
-| `sm::toFloat3x3(float4x4)` | Upper-left 3×3 extraction |
 | `sm::abs(v)` | Component-wise absolute value |
-| `sm::smoothstep(e0, e1, x)` | Hermite smooth-step |
-| `sm::distance(a, b)` | Euclidean distance between two float3 points |
+| `sm::sqrt(v)` | Component-wise square root |
+| `sm::exp(v)` | Component-wise eˣ |
+| `sm::cos(v)` | Component-wise cosine |
+| `sm::log(v)` | Component-wise natural logarithm |
+| `sm::pow(v, p)` | Component-wise power (scalar exponent) |
+| `sm::transpose(m)` | Matrix transpose (all square sizes) |
+| `sm::inverse(m)` | Matrix inverse (closed form 2×2, Cramer 3×3, Gauss-Jordan 4×4) |
+| `sm::inverseTranspose(m)` | `transpose(inverse(m))` — normal matrix |
+| `sm::determinant(m)` | 2×2 / 3×3 determinant |
+| `sm::toFloat2x2(m)` | Upper-left 2×2 extraction (from 3×3 / 4×4) |
+| `sm::toFloat3x3(float4x4)` | Upper-left 3×3 extraction |
+| `sm::smoothstep(e0, e1, x)` | Hermite smooth-step (scalar) |
+| `sm::distance(a, b)` | Euclidean distance between two points |
 | `sm::value_ptr(v/m)` | `const float*` to first element (buffer upload helper) |
 
 ## Transform builders
@@ -147,7 +155,7 @@ cmake --build build
 cd build; ctest --output-on-failure
 ```
 
-All 39 tests pass (vectors, matrices, quaternion algebra, transforms, inverse
+All 60 tests pass (vectors, matrices, quaternion algebra, transforms, inverse
 projection/view round-trips, sky-reprojection math, layout verification).
 
 ## References
