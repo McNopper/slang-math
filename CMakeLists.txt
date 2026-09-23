@@ -45,6 +45,17 @@ if(PROJECT_IS_TOP_LEVEL)
     option(ENABLE_CPPCHECK "Enable cppcheck static analysis target" ON)
     option(ENABLE_CPPCHECK_IN_BUILD "Run cppcheck alongside the compiler" OFF)
 
+    # Sanitizer lane (Clang/GCC only):
+    #   cmake -DSLANGMATH_SANITIZER=address|undefined|thread ...
+    set(SLANGMATH_SANITIZER "" CACHE STRING "Sanitizer: address, undefined, or thread (Clang/GCC only)")
+    if(SLANGMATH_SANITIZER)
+        if(MSVC)
+            message(FATAL_ERROR "SLANGMATH_SANITIZER requires Clang/GCC (use a Ninja+clang or WSL configure)")
+        endif()
+        add_compile_options("-fsanitize=${SLANGMATH_SANITIZER}" -fno-omit-frame-pointer)
+        add_link_options("-fsanitize=${SLANGMATH_SANITIZER}")
+    endif()
+
     # All first-party C/C++ sources (clang-format); compiled translation units
     # only (clang-tidy) — headers are analysed transitively via HeaderFilterRegex.
     file(GLOB_RECURSE PROJECT_CXX_SOURCES CONFIGURE_DEPENDS
@@ -186,5 +197,17 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     include(CTest)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+# Static-analysis ctest lane: parallel clang-tidy over
+# build/compile_commands.json, classified per the .clang-tidy WarningsAsErrors
+# contract. Skips (77) when clang-tidy / Python3 / the database is unavailable.
+if(PROJECT_IS_TOP_LEVEL)
+    find_package(Python3 COMPONENTS Interpreter QUIET)
+    if(Python3_Interpreter_FOUND)
+        add_test(NAME test_tidy
+                 COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/check_tidy.py)
+        set_tests_properties(test_tidy PROPERTIES SKIP_RETURN_CODE 77 LABELS analysis)
+    endif()
 endif()
 
