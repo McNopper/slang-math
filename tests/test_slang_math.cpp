@@ -58,6 +58,12 @@ TEST(Float2, Index) {
     EXPECT_EQ(v[1], 7.f);
 }
 
+TEST(Float2, RgAlias) {
+    float2 c{0.1f, 0.2f};
+    EXPECT_EQ(c.r, c.x);
+    EXPECT_EQ(c.g, c.y);
+}
+
 // ── float3 ───────────────────────────────────────────────────────────────────
 
 TEST(Float3, RgbAlias) {

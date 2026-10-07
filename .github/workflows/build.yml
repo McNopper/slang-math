@@ -1,0 +1,63 @@
+﻿name: Build
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      # Windows/clang-cl/Ninja and Linux/g++/Ninja - the toolchains the
+      # sibling renderer repos build on (both proven locally). macOS is
+      # absent on purpose: Platform.cmake rejects it outright.
+      matrix:
+        os: [windows-latest, ubuntu-26.04]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # clang-cl may or may not ship on the runner image; like any choco
+      # PATH change, it is not inherited by later steps. (Linux uses the
+      # image's g++, proven in WSL - no install needed.)
+      - name: Ensure clang-cl
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          if (Get-Command clang-cl -ErrorAction SilentlyContinue) {
+            Write-Output 'clang-cl present on image'
+          } else {
+            choco install -y llvm
+            "PATH=C:\Program Files\LLVM\bin;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          }
+
+      # Interface library + C++ tests, no vcpkg and no Vulkan SDK required.
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl
+
+      - name: Configure (Linux)
+        if: runner.os == 'Linux'
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+
+      - name: Build
+        run: cmake --build build
+
+      # slang-math is the dependency base for everything above it, so its
+      # suite runs in CI: the math contracts are pure C++ (no Vulkan). ctest
+      # is serial without -j, matching the family's one-test-at-a-time rule.
+      # test_tidy skips itself (exit 77) when clang-tidy is absent.
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
