@@ -1,5 +1,7 @@
 # slang-math
 
+[![Build](https://github.com/McNopper/slang-math/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/McNopper/slang-math/actions/workflows/build.yml)
+
 Standalone header-only C++ math library with **Slang/HLSL naming and row-major matrix layout**.
 
 Types mirror the Slang / HLSL built-in math vocabulary (`float2`, `float3`, `float4`,
