@@ -56,7 +56,7 @@ of scope by design (slang-math is header-only and constexpr-friendly).
 | SM2 | **Trig + geometric completion** — `sin`/`tan`/`asin`/`acos`/`atan`/`atan2` (vec), `faceforward`, `refract` (zero-vector-on-TIR). | — | backlog |
 | SM3 | **Matrix/quaternion completeness** — `determinant(float4x4)` (cofactor expansion; 2×2/3×3 exist), `v*M` row-vector ops for `float2x2`/`float3x3` (float4x4 has it, `float4x4.hpp:70`), `toFloat3x3(quaternion)` (symmetry with `toFloat4x4`), `toQuaternion(float3x3)` (Shepperd's method; TRS-decompose prerequisite for the family's animation track). | — | backlog |
 | SM4 | **Transform builders** — `trs(t, q, s)` compose (the `Harmonia/src/harmonia/scene/Geometry.cpp:97` T·R·S pattern; feeds the node-hierarchy work NH2 in Harmonia/PLAN.md), `ortho` + `inverseOrtho` (RH ZO depth, symmetric with the `perspective`/`inversePerspective` pair). | — | backlog |
-| SM5 | **Docs + release** — AGENTS.md `float_vec` enumeration refresh, version 0.2.1 → **0.3.0** (minor bump, API additions), test-per-function per the repo contract, `verify-full` clean. *(README refresh — types/functions tables, test count — already done.)* | SM1–SM4 | backlog |
+| SM5 | **Docs + release** — AGENTS.md `float_vec` enumeration refresh, version **0.3.0 → 0.4.0** (minor bump, API additions; **0.3.0 was consumed by the 2026-10-09 alias/tooling wave**), test-per-function per the repo contract, `verify-full` clean. *(README refresh — types/functions tables, test count — already done.)* | SM1–SM4 | backlog |
 | SM6 | **Downstream migration** (post-tag) — replace hand-rolled downstream code with the new functions (saturate sites, dead `Math::isNanOrInf`, duplicate `kPi` constants, `IblProbe` hand-rolled `Mat3` → `sm::float3x3`, `Geometry.cpp` TRS → `sm::trs`, test-mirror `rsqrt`/`saturate` cleanup). **Owned by the downstream repos** — Aether/Harmonia/Hyperion/Theia each carry their slice in their own PLAN.md; this repo's part ends at tagging v0.3.0. | SM5, v0.3.0 tag | backlog |
 
 SM1–SM5 ship as **one release (slang-math v0.3.0)** — the split is for readability, not
@@ -101,7 +101,14 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
-- **v0.2.1** (current): generic vector operators (`template<vec V>`) from the family-wide
+- **v0.3.0** (current): spec-grounded component aliases (`float2` `r`/`g`; `float3`/`float4`
+  `r`/`g`/`b`(/`a`) — the Slang swizzle vocabulary per the user guide's "xyzw and rgba only";
+  `stpq` deliberately unsupported) with the scoped GCC `-Wpedantic` justification pragma;
+  `-Wpedantic` compliance; dual-OS CI (`windows-latest` + `ubuntu-26.04` — build + the
+  62-test suite on both); CMakePresets (win), the classified `check_tidy.py` / ctest
+  `test_tidy` lane, sanitizer option, deterministic host FP; PLAN.md introduced (dissolved
+  from the workspace sprint plan); README type/function tables refreshed.
+- **v0.2.1**: generic vector operators (`template<vec V>`) from the family-wide
   code-health pass; consumed by all four downstream repos.
 - **v0.2.0**: the established type set (float2/3/4, uint2/3/4, float2x2/3x3/4x4, quaternion),
   row-major layout, RH+ZO-only transform builders.
