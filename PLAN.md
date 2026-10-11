@@ -41,8 +41,8 @@ repo's "complete, consistent, standalone package" type-set policy (AGENTS.md). G
 downstream evidence: shader `saturate` has 99 call sites vs ~40 hand-rolled
 `std::clamp(x,0,1)` host sites (Harmonia 26, Aether 12, Theia 1) plus a local `clamp01()`
 (`Harmonia/src/harmonia/pipeline/SceneOutputCopyPass.cpp:36`); shader `isfinite` has 29 sites
-and Harmonia carries a dead hand-rolled `Math::isNanOrInf`
-(`Harmonia/src/harmonia/utils/Math.hpp:39`); `cos` is the only trig function shipped, so
+and Harmonia's dead hand-rolled `Math::isNanOrInf` has been deleted (H-04, 2026-10-09); `cos`
+is the only trig function shipped, so
 downstream runs per-component `std::sin`/`std::cos`/`std::atan2` code
 (`Theia/src/theia/renderer/CameraController.hpp`, Harmonia's `IblProbe.cpp`/`Light.cpp`);
 `rsqrt` is hand-mirrored as `1/std::sqrt` in two spots (`Hyperion/tests/unit/test_bsdf.cpp:491`,
