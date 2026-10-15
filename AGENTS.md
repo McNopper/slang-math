@@ -93,10 +93,13 @@ Equivalent preset flow (Ninja + Release + clang-cl, no vcpkg â€” header-onl
 (clang-diagnostic/clang-analyzer/bugprone fail the run; modernize/performance/portability
 are report-only). Also registered as ctest `test_tidy` (label `analysis`; the fast test loop is `ctest -LE analysis`; skips when
 clang-tidy, Python3 or the database is missing).
-**Architecture gate:** `python tools/check_layers.py` (ctest `test_layers`, label
-`analysis`) — slang-math is a flat single-module header library, so the gate enforces the
+**Architecture gate:** `ARCHITECTURE.md` is the machine-checked architecture contract
+(the check-arch reflexion gate - the document is the contract, the include graph is measured
+against it). ctest `test_arch` runs the vendored `tools/check_arch.py` engine (label
+`analysis`; registered only where the check-arch skill exists — local, not CI). Contract:
+slang-math is a flat single-module header library, so the gate enforces the
 one architecture contract that applies: **no cyclic `#include` dependencies** (file-level
-SCC detection; partial/deferred cycles that merely compile still fail).
+SCC detection; partial/deferred cycles that merely compile still fail). slang-math is the family root — nothing downstream may ever be included.
 Sanitizer lane (Clang/GCC configures only):
 `-DSLANGMATH_SANITIZER=address|undefined|thread`. Host-side FP is deterministic
 (`/fp:strict` / `-ffp-contract=off -fno-fast-math`).
