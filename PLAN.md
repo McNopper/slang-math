@@ -101,7 +101,12 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
-- **v0.3.0** (current): spec-grounded component aliases (`float2` `r`/`g`; `float3`/`float4`
+- **v0.3.1** (current): **architecture gate.** `tools/check_layers.py` (ctest
+  `test_layers`, label `analysis`) — slang-math is a flat single-module header library, so
+  the gate enforces the one architecture contract that applies: **no cyclic `#include`
+  dependencies** (file-level SCC detection; partial/deferred cycles that merely compile
+  still fail). AGENTS documents the gate. 62/62 ctest on Windows; Linux suite green.
+- **v0.3.0**: spec-grounded component aliases (`float2` `r`/`g`; `float3`/`float4`
   `r`/`g`/`b`(/`a`) — the Slang swizzle vocabulary per the user guide's "xyzw and rgba only";
   `stpq` deliberately unsupported) with the scoped GCC `-Wpedantic` justification pragma;
   `-Wpedantic` compliance; dual-OS CI (`windows-latest` + `ubuntu-26.04` — build + the
