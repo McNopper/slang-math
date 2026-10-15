@@ -26,7 +26,7 @@ ROOTS = {'slang-math/': 'include'}
 EXTERNAL = ()
 SCAN = ['include']
 
-INC = re.compile(r'^\s*#\s*include\s+"([\w./-]+)"')
+INC = re.compile(r'^\s*#\s*include\s+([<"])([\w./-]+)[>"]')
 
 
 def module_of(_rel):
@@ -106,12 +106,13 @@ def main():
             m = INC.match(line)
             if not m:
                 continue
-            t = resolve(m.group(1), p)
+            t = resolve(m.group(2), p)
             if t in adj and t != p:
                 adj[p].add(t)
                 edge_count += 1
             elif t not in adj:
-                unresolved.append(f'{rel}: "{m.group(1)}"')
+                if m.group(1) == '"':
+                    unresolved.append(f'{rel}: "{m.group(2)}"')
     violations = []
     cycles = [c for c in scc(list(files), adj) if len(c) > 1]
     for c in cycles:
