@@ -101,6 +101,16 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
+## Baseline
+
+- **v0.3.2** (current): **Q1 coverage lane.** `<SLANGMATH>_COVERAGE` CMake option
+  (clang: `-fprofile-instr-generate -fcoverage-mapping`, gcc: `--coverage`; clang-cl links
+  via `-fuse-ld=lld` for the profile runtime) + `tools/coverage.py` orchestrator
+  (instrumented configure/build, ctest with `LLVM_PROFILE_FILE`, profdata merge, llvm-cov
+  report). Verified end-to-end: 61/61 tests, **90.65% line coverage** on the headers.
+  AGENTS documents the lane and the architecture-gate contract (check-arch vendored
+  engine, orphan-free).
+
 - **v0.3.1** (current): **architecture gate.** `tools/check_layers.py` (ctest
   `test_layers`, label `analysis`) — slang-math is a flat single-module header library, so
   the gate enforces the one architecture contract that applies: **no cyclic `#include`
