@@ -25,12 +25,11 @@ namespace sm {
 
 /// Translation: `translate(m, v)` = M * T(v).
 [[nodiscard]] inline float4x4 translate(const float4x4& m, const float3& v) noexcept {
-    // Only the last column (w-component of each row) changes: result[i][3] = dot(row i, v).
+    // Only the last column (w-component of each row) changes: result[i][3] = dot(row i, [v, 1]).
     float4x4 result = m;
-    result.rows[0].w = m.rows[0].x * v.x + m.rows[0].y * v.y + m.rows[0].z * v.z + m.rows[0].w;
-    result.rows[1].w = m.rows[1].x * v.x + m.rows[1].y * v.y + m.rows[1].z * v.z + m.rows[1].w;
-    result.rows[2].w = m.rows[2].x * v.x + m.rows[2].y * v.y + m.rows[2].z * v.z + m.rows[2].w;
-    result.rows[3].w = m.rows[3].x * v.x + m.rows[3].y * v.y + m.rows[3].z * v.z + m.rows[3].w;
+    for (std::uint32_t i = 0; i < 4; ++i) {
+        result.rows[i].w = m.rows[i].x * v.x + m.rows[i].y * v.y + m.rows[i].z * v.z + m.rows[i].w;
+    }
     return result;
 }
 
