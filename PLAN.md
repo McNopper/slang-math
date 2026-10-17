@@ -29,9 +29,14 @@ in the sibling clones.
 
 ## At a glance
 
-- **Release:** v0.2.1 (tag-synced with GitHub).
-- **Next:** SM1–SM5, shipped as **one release (v0.3.0)** — see below.
-
+- **Release:** v0.4.0 (tag-synced with GitHub) - `sm::saturate` (canonical Slang/HLSL
+  clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows
+  looped). The SM6 shader-migration gate downstream is now satisfied.
+- **Quality gates:** blocking lint (Q2-Q6) + **blocking coverage CI** (`coverage (Q1)`
+  job, llvm-cov: 90.74% regions / 86.68% lines).
+- **Next:** SM6 adoption waves land downstream (Aether, then Harmonia/Theia) against
+  this tag; slang-math itself is stable. X-01 (canonical `check_tidy.py`) deferred -
+  possibly a separate quality repo later.
 ## How to continue
 
 ### slang-math function-parity track (SM)
