@@ -121,6 +121,18 @@ template <vec V> [[nodiscard]] inline constexpr V clamp(const V& v, const V& lo,
     return r;
 }
 
+// ── Saturate (clamp to [0, 1]) — canonical Slang/HLSL name ────────────────────
+
+[[nodiscard]] inline constexpr float saturate(float v) noexcept {
+    return std::clamp(v, 0.0f, 1.0f);
+}
+template <float_vec V> [[nodiscard]] inline constexpr V saturate(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::clamp(v[i], 0.0f, 1.0f);
+    return r;
+}
+
 // ── Lerp (linear interpolation) — canonical Slang/HLSL name ─────────────────────
 
 [[nodiscard]] inline constexpr float lerp(float a, float b, float t) noexcept {

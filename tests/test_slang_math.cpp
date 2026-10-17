@@ -199,6 +199,19 @@ TEST(Functions, Radians) {
     EXPECT_NEAR(degrees(pi<float>()), 180.f, kEps);
 }
 
+TEST(Functions, SaturateClampsToUnitRange) {
+    // scalar + vector: below 0 -> 0, above 1 -> 1, in-range unchanged
+    EXPECT_EQ(saturate(-0.25f), 0.0f);
+    EXPECT_EQ(saturate(0.5f), 0.5f);
+    EXPECT_EQ(saturate(1.75f), 1.0f);
+    EXPECT_EQ((saturate(float2{-1, 2})), (float2{0, 1}));
+    EXPECT_EQ((saturate(float3{-3, 0.5f, 3})), (float3{0, 0.5f, 1}));
+    EXPECT_EQ((saturate(float4{-1, 0, 1, 5})), (float4{0, 0, 1, 1}));
+    // endpoints are exact: saturate is the SM6 gate for shader migrations
+    EXPECT_EQ(saturate(0.0f), 0.0f);
+    EXPECT_EQ(saturate(1.0f), 1.0f);
+}
+
 TEST(Functions, Mat3FromMat4) {
     float4x4 m{1.f};
     m[3] = {99, 99, 99, 1}; // row 3 (homogeneous row) — should be ignored in 3×3 extraction
