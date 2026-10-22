@@ -157,7 +157,7 @@ cmake --build build
 cd build; ctest --output-on-failure
 ```
 
-All 60 tests pass (vectors, matrices, quaternion algebra, transforms, inverse
+All 64 tests pass (vectors, matrices, quaternion algebra, transforms, inverse
 projection/view round-trips, sky-reprojection math, layout verification).
 
 ## References
