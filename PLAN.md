@@ -34,7 +34,7 @@ in the sibling clones.
   looped). The SM6 shader-migration gate downstream is now satisfied.
 - **Quality gates:** blocking lint (Q2-Q6) + **blocking coverage CI** (`coverage (Q1)`
   job, llvm-cov: 90.74% regions / 86.68% lines).
-- **Next:** SM6 adoption waves land downstream (Aether, then Harmonia/Theia) against
+- **Next:** SM6 adoption lands downstream (Aether, then Harmonia/Theia) against
   this tag; slang-math itself is stable. X-01 (canonical `check_tidy.py`) deferred -
   possibly a separate quality repo later.
 ## How to continue
@@ -46,7 +46,7 @@ repo's "complete, consistent, standalone package" type-set policy (AGENTS.md). G
 downstream evidence: shader `saturate` has 99 call sites vs ~40 hand-rolled
 `std::clamp(x,0,1)` host sites (Harmonia 26, Aether 12, Theia 1) plus a local `clamp01()`
 (`Harmonia/src/harmonia/pipeline/SceneOutputCopyPass.cpp:36`); shader `isfinite` has 29 sites
-and Harmonia's dead hand-rolled `Math::isNanOrInf` has been deleted (H-04, 2026-10-09); `cos`
+and Harmonia's dead hand-rolled `Math::isNanOrInf` has been deleted (H-04); `cos`
 is the only trig function shipped, so
 downstream runs per-component `std::sin`/`std::cos`/`std::atan2` code
 (`Theia/src/theia/renderer/CameraController.hpp`, Harmonia's `IblProbe.cpp`/`Light.cpp`);
@@ -61,12 +61,12 @@ of scope by design (slang-math is header-only and constexpr-friendly).
 | SM2 | **Trig + geometric completion** — `sin`/`tan`/`asin`/`acos`/`atan`/`atan2` (vec), `faceforward`, `refract` (zero-vector-on-TIR). | — | backlog |
 | SM3 | **Matrix/quaternion completeness** — `determinant(float4x4)` (cofactor expansion; 2×2/3×3 exist), `v*M` row-vector ops for `float2x2`/`float3x3` (float4x4 has it, `float4x4.hpp:70`), `toFloat3x3(quaternion)` (symmetry with `toFloat4x4`), `toQuaternion(float3x3)` (Shepperd's method; TRS-decompose prerequisite for the family's animation track). | — | backlog |
 | SM4 | **Transform builders** — `trs(t, q, s)` compose (the `Harmonia/src/harmonia/scene/Geometry.cpp:97` T·R·S pattern; feeds the node-hierarchy work NH2 in Harmonia/PLAN.md), `ortho` + `inverseOrtho` (RH ZO depth, symmetric with the `perspective`/`inversePerspective` pair). | — | backlog |
-| SM5 | **Docs + release** — AGENTS.md `float_vec` enumeration refresh, version **0.3.0 → 0.4.0** (minor bump, API additions; **0.3.0 was consumed by the 2026-10-09 alias/tooling wave**), test-per-function per the repo contract, `verify-full` clean. *(README refresh — types/functions tables, test count — already done.)* | SM1–SM4 | backlog |
-| SM6 | **Downstream migration** (post-tag) — replace hand-rolled downstream code with the new functions (saturate sites, dead `Math::isNanOrInf`, duplicate `kPi` constants, `IblProbe` hand-rolled `Mat3` → `sm::float3x3`, `Geometry.cpp` TRS → `sm::trs`, test-mirror `rsqrt`/`saturate` cleanup). **Owned by the downstream repos** — Aether/Harmonia/Hyperion/Theia each carry their slice in their own PLAN.md; this repo's part ends at tagging v0.3.0. | SM5, v0.3.0 tag | backlog |
+| SM5 | **Docs + release** — AGENTS.md `float_vec` enumeration refresh, version **0.3.0 → 0.4.0** (minor bump, API additions; **v0.3.0 was already consumed by the alias/tooling release**), test-per-function per the repo contract, `verify-full` clean. *(README refresh — types/functions tables, test count — already done.)* | SM1–SM4 | backlog |
+| SM6 | **Downstream migration** (post-tag) — replace hand-rolled downstream code with the new functions (saturate sites, dead `Math::isNanOrInf`, duplicate `kPi` constants, `IblProbe` hand-rolled `Mat3` → `sm::float3x3`, `Geometry.cpp` TRS → `sm::trs`, test-mirror `rsqrt`/`saturate` cleanup). **Tracked in the downstream repos** — Aether/Harmonia/Hyperion/Theia each carry their slice in their own PLAN.md; this repo's part ends at tagging v0.3.0. | SM5, v0.3.0 tag | backlog |
 
 SM1–SM5 ship as **one release (slang-math v0.3.0)** — the split is for readability, not
-sequencing; SM6 is the deliberate follow-up (deferred by scope decision, 2026-08-05: the
-implementation session stays inside slang-math).
+sequencing; SM6 is the deliberate follow-up (deferred by scope decision: the
+implementation stays inside slang-math).
 
 **Design decisions (locked):** naming = HLSL/Slang spelling (`frac`, `fma`, `rsqrt` — never
 the glm `fract`/`inversesqrt`; no aliases per the repo's one-canonical-name rule). Scalar
@@ -92,7 +92,7 @@ never silence it). Every new function carries a round-trip or identity test (rep
 - Naming conventions and the type-set policy in `AGENTS.md` are enforced — do not regress.
 - API additions are a minor version bump; breaking renames coordinate with downstream repos
   (migrate all call sites in Aether/Harmonia/Hyperion/Theia in the same change).
-- Fix bugs at once — root-caused and patched in the same session. Deferral is not an
+- Fix bugs at once — root-caused and patched in the same change. Deferral is not an
   acceptable resolution for a known defect.
 - Solve directly, never defer: divergences are root-caused and fixed in code, not
   documented away.
@@ -106,17 +106,15 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
-## Baseline
-
 - **v0.3.2** (current): **Q1 coverage lane.** `<SLANGMATH>_COVERAGE` CMake option
   (clang: `-fprofile-instr-generate -fcoverage-mapping`, gcc: `--coverage`; clang-cl links
-  via `-fuse-ld=lld` for the profile runtime) + `tools/coverage.py` orchestrator
+  via `-fuse-ld=lld` for the profile runtime) + `tools/coverage.py` script
   (instrumented configure/build, ctest with `LLVM_PROFILE_FILE`, profdata merge, llvm-cov
   report). Verified end-to-end: 61/61 tests, **90.65% line coverage** on the headers.
-  AGENTS documents the lane and the architecture-gate contract (check-arch vendored
+  AGENTS documents the lane and the architecture-gate contract (vendored
   engine, orphan-free).
 
-- **v0.3.1** (current): **architecture gate.** `tools/check_layers.py` (ctest
+- **v0.3.1**: **architecture gate.** `tools/check_layers.py` (ctest
   `test_layers`, label `analysis`) — slang-math is a flat single-module header library, so
   the gate enforces the one architecture contract that applies: **no cyclic `#include`
   dependencies** (file-level SCC detection; partial/deferred cycles that merely compile
@@ -126,10 +124,9 @@ never silence it). Every new function carries a round-trip or identity test (rep
   `stpq` deliberately unsupported) with the scoped GCC `-Wpedantic` justification pragma;
   `-Wpedantic` compliance; dual-OS CI (`windows-latest` + `ubuntu-26.04` — build + the
   62-test suite on both); CMakePresets (win), the classified `check_tidy.py` / ctest
-  `test_tidy` lane, sanitizer option, deterministic host FP; PLAN.md introduced (dissolved
-  from the workspace sprint plan); README type/function tables refreshed.
-- **v0.2.1**: generic vector operators (`template<vec V>`) from the family-wide
-  code-health pass; consumed by all four downstream repos.
+  `test_tidy` lane, sanitizer option, deterministic host FP; PLAN.md introduced;
+  README type/function tables refreshed.
+- **v0.2.1**: generic vector operators (`template<vec V>`), consumed by all four downstream repos.
 - **v0.2.0**: the established type set (float2/3/4, uint2/3/4, float2x2/3x3/4x4, quaternion),
   row-major layout, RH+ZO-only transform builders.
 - Earlier history in `git log`.

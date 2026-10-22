@@ -1,7 +1,7 @@
 # Architecture
 
-The checked-in architecture contract for slang-math (the check-arch reflexion
-gate). slang-math is a flat, single-module header library — there is no layer
+The checked-in architecture contract for slang-math. slang-math is a flat,
+single-module header library — there is no layer
 stack to enforce. The architecture contract is the one that applies: **no
 cyclic `#include` dependencies** (file-level strongly-connected components;
 partial/deferred cycles that happen to compile are still a violation).
@@ -43,8 +43,8 @@ namespace_require:
 unresolved: info
 within_layer: deny              # undeclared same-layer edges: violations
 kind: library                   # public API surface: volume judged per file
-header_size: error               # the standing bloat rule (hard gate; the 2026-10 bloat queue is drained)
-smells: report                 # refactoring-catalog proxies: report-only review signals
+header_size: error               # the standing bloat rule (hard gate)
+smells: report                 # report-only: informational signals, not gate failures
 
 layer slang-math
 
