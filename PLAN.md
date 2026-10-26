@@ -29,7 +29,9 @@ in the sibling clones.
 
 ## At a glance
 
-- **Release:** v0.4.0 (tag-synced with GitHub) - `sm::saturate` (canonical Slang/HLSL
+- **Release:** v0.5.0 (tag-synced with GitHub) - SM4 transform builders
+  (`trs` / `ortho` / `inverseOrtho` with round-trip tests; 70/70 ctest).
+- **Prior:** v0.4.0 - `sm::saturate` (canonical Slang/HLSL
   clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows
   looped). The SM6 shader-migration gate downstream is now satisfied.
 - **Quality gates:** blocking lint (Q2-Q6) + **blocking coverage CI** (`coverage (Q1)`
@@ -106,7 +108,8 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
-- **v0.4.0** (current): **`sm::saturate`** (canonical Slang/HLSL clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows looped) + the family quality gates (blocking lint, blocking coverage CI: 90.74% regions / 86.68% lines). 64/64 ctest.
+- **v0.5.0** (current): **SM4 transform builders** - `trs(t, q, s)` compose, `ortho` + `inverseOrtho` (RH ZO), 6 round-trip/identity tests; 70/70 ctest, arch gate clean.
+- **v0.4.0**: **`sm::saturate`** (canonical Slang/HLSL clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows looped) + the family quality gates (blocking lint, blocking coverage CI: 90.74% regions / 86.68% lines). 64/64 ctest.
 - **v0.3.2**: **Q1 coverage lane.** `<SLANGMATH>_COVERAGE` CMake option
   (clang: `-fprofile-instr-generate -fcoverage-mapping`, gcc: `--coverage`; clang-cl links
   via `-fuse-ld=lld` for the profile runtime) + `tools/coverage.py` script
