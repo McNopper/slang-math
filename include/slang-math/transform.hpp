@@ -60,6 +60,20 @@ namespace sm {
     return m * rot;
 }
 
+/// TRS compose: world matrix from translation `t`, rotation quaternion `q`,
+/// and scale `s` - the `T * R * S` convention (scale in local space, rotated,
+/// then translated).  Equivalent to
+/// `translate(scale(toFloat4x4(q), s), t)` in one pass, no temporaries.
+[[nodiscard]] inline float4x4 trs(const float3& t, const quaternion& q, const float3& s) noexcept {
+    const float4x4 r = toFloat4x4(q);
+    return {
+        {r[0][0] * s.x, r[0][1] * s.y, r[0][2] * s.z, t.x},
+        {r[1][0] * s.x, r[1][1] * s.y, r[1][2] * s.z, t.y},
+        {r[2][0] * s.x, r[2][1] * s.y, r[2][2] * s.z, t.z},
+        {0.f, 0.f, 0.f, 1.f},
+    };
+}
+
 // ── Camera projection ─────────────────────────────────────────────────────────
 
 /// Right-handed look-at view matrix (Vulkan ZO convention across this library).
@@ -131,6 +145,37 @@ namespace sm {
         {0.f, f, 0.f, 0.f},                         // row 1
         {0.f, 0.f, -zFar / d, -(zFar * zNear) / d}, // row 2
         {0.f, 0.f, -1.f, 0.f},                      // row 3
+    };
+}
+
+/// Right-handed orthographic projection with [0, 1] depth range (Vulkan),
+/// symmetric with `perspective` (camera looks down -Z).
+[[nodiscard]] inline float4x4
+ortho(float left, float right, float bottom, float top, float zNear, float zFar) noexcept {
+    const float sx = 2.f / (right - left);
+    const float sy = 2.f / (top - bottom);
+    const float sz = 1.f / (zNear - zFar);
+    return {
+        {sx, 0.f, 0.f, -(right + left) * sx},
+        {0.f, sy, 0.f, -(top + bottom) * sy},
+        {0.f, 0.f, sz, zNear * sz},
+        {0.f, 0.f, 0.f, 1.f},
+    };
+}
+
+/// Analytical inverse of an `ortho` matrix - diagonal-plus-translation,
+/// ~6 multiply-adds.  Equivalent to sm::inverse(ortho(...)) but exact and
+/// cheaper.
+[[nodiscard]] inline float4x4
+inverseOrtho(float left, float right, float bottom, float top, float zNear, float zFar) noexcept {
+    const float sx = (right - left) * 0.5f;
+    const float sy = (top - bottom) * 0.5f;
+    const float sz = zNear - zFar;
+    return {
+        {sx, 0.f, 0.f, (right + left) * 0.5f},
+        {0.f, sy, 0.f, (top + bottom) * 0.5f},
+        {0.f, 0.f, sz, -zNear},
+        {0.f, 0.f, 0.f, 1.f},
     };
 }
 

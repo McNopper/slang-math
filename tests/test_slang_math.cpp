@@ -293,6 +293,73 @@ TEST(Transform, RowVectorShaderConvention) {
     EXPECT_TRUE(near(row_result, col_result));
 }
 
+// ── SM4: TRS compose / ortho / inverseOrtho ──
+
+TEST(Transform, TrsComposeMatchesChainedBuilders) {
+    const float3 t{1.f, -2.f, 3.f};
+    const quaternion q = angleAxis(radians(30.f), normalize(float3{1.f, 1.f, 1.f}));
+    const float3 s{2.f, -1.5f, 0.5f};
+    const float4x4 composed = trs(t, q, s);
+    // T * R * S via the existing post-multiply builders:
+    // translate first, then the quaternion rotation, then scale.
+    const float4x4 chained = translate(identity<float4x4>(), t) * toFloat4x4(q) * scale(identity<float4x4>(), s);
+    EXPECT_TRUE(near(composed, chained));
+}
+
+TEST(Transform, TrsMapsOriginAndUnitAxes) {
+    const float3 t{4.f, -1.f, 7.f};
+    const quaternion q = angleAxis(radians(90.f), float3{0.f, 1.f, 0.f});
+    const float3 s{2.f, 3.f, 4.f};
+    const float4x4 m = trs(t, q, s);
+    const float4 origin{0.f, 0.f, 0.f, 1.f};
+    const float4 op = m * origin;
+    EXPECT_NEAR(op.x, t.x, kEps);
+    EXPECT_NEAR(op.y, t.y, kEps);
+    EXPECT_NEAR(op.z, t.z, kEps);
+    // Unit X scaled by 2, rotated 90 deg about Y -> (0, 0, -2) + t.
+    const float4 xAxis = m * float4{1.f, 0.f, 0.f, 1.f};
+    EXPECT_NEAR(xAxis.x, t.x, kEps);
+    EXPECT_NEAR(xAxis.z, t.z - s.x, kEps);
+}
+
+TEST(Transform, TrsIdentityIsIdentity) {
+    EXPECT_TRUE(near(trs({0, 0, 0}, identity<quaternion>(), {1, 1, 1}), identity<float4x4>()));
+}
+
+TEST(Transform, OrthoDepthRange) {
+    // Near plane maps to depth 0, far plane to depth 1 (Vulkan ZO convention).
+    const float4x4 o = ortho(-10.f, 10.f, -5.f, 5.f, 0.1f, 100.f);
+    const float4 near_pt{0.f, 0.f, -0.1f, 1.f};
+    const float4 ndc = o * near_pt;
+    EXPECT_NEAR(ndc.z / ndc.w, 0.f, 1e-4f);
+    const float4 far_pt{0.f, 0.f, -100.f, 1.f};
+    const float4 ndc_far = o * far_pt;
+    EXPECT_NEAR(ndc_far.z / ndc_far.w, 1.f, 1e-4f);
+}
+
+TEST(Transform, OrthoMapsBoxExtentsToNdcExtents) {
+    const float4x4 o = ortho(-10.f, 10.f, -5.f, 5.f, 0.1f, 100.f);
+    const float4 right_top_far{10.f, 5.f, -100.f, 1.f};
+    const float4 ndc = o * right_top_far;
+    EXPECT_NEAR(ndc.x / ndc.w, 1.f, 1e-4f);
+    EXPECT_NEAR(ndc.y / ndc.w, 1.f, 1e-4f);
+    EXPECT_NEAR(ndc.z / ndc.w, 1.f, 1e-4f);
+    const float4 left_bottom_near{-10.f, -5.f, -0.1f, 1.f};
+    const float4 ndc2 = o * left_bottom_near;
+    EXPECT_NEAR(ndc2.x / ndc2.w, -1.f, 1e-4f);
+    EXPECT_NEAR(ndc2.y / ndc2.w, -1.f, 1e-4f);
+    EXPECT_NEAR(ndc2.z / ndc2.w, 0.f, 1e-4f);
+}
+
+TEST(Transform, InverseOrthoRoundTrip) {
+    const float4x4 o = ortho(-10.f, 10.f, -5.f, 5.f, 0.1f, 100.f);
+    const float4x4 oi = inverseOrtho(-10.f, 10.f, -5.f, 5.f, 0.1f, 100.f);
+    EXPECT_TRUE(near(o * oi, identity<float4x4>()));
+    EXPECT_TRUE(near(oi * o, identity<float4x4>()));
+    const float4 pt{3.f, -2.f, -42.f, 1.f};
+    EXPECT_TRUE(near(oi * (o * pt), pt));
+}
+
 // ── Inverse projection / view (S2: back the shipped sky reprojection fix) ──────
 
 TEST(InverseProjection, PerspectiveInverseRoundTrip) {
