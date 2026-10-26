@@ -289,8 +289,11 @@ template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, c
 
 namespace detail {
 
+inline constexpr std::int32_t matrixCols = 4;                 ///< float4x4 dimension
+inline constexpr std::int32_t augmentedCols = matrixCols * 2; ///< matrix columns + identity columns
+
 struct AugmentedMatrix {
-    float rows[4][8]{};
+    float rows[matrixCols][augmentedCols]{};
 };
 
 [[nodiscard]] inline constexpr AugmentedMatrix buildAugmented(const float4x4& m) noexcept {
@@ -298,7 +301,7 @@ struct AugmentedMatrix {
     for (std::int32_t i = 0; i < 4; ++i)
         for (std::int32_t j = 0; j < 4; ++j) {
             aug.rows[i][j] = m[i][j];
-            aug.rows[i][j + 4] = (i == j) ? 1.f : 0.f;
+            aug.rows[i][j + matrixCols] = (i == j) ? 1.f : 0.f;
         }
     return aug;
 }
@@ -313,7 +316,7 @@ struct AugmentedMatrix {
 
 inline constexpr void normalizePivotRow(AugmentedMatrix& aug, std::int32_t col) noexcept {
     const float invDiag = 1.f / aug.rows[col][col];
-    for (std::int32_t k = 0; k < 8; ++k)
+    for (std::int32_t k = 0; k < augmentedCols; ++k)
         aug.rows[col][k] *= invDiag;
 }
 
@@ -322,7 +325,7 @@ inline constexpr void eliminateRows(AugmentedMatrix& aug, std::int32_t col) noex
         if (row == col)
             continue;
         const float f = aug.rows[row][col];
-        for (std::int32_t k = 0; k < 8; ++k)
+        for (std::int32_t k = 0; k < augmentedCols; ++k)
             aug.rows[row][k] -= f * aug.rows[col][k];
     }
 }
@@ -331,7 +334,7 @@ inline constexpr void eliminateRows(AugmentedMatrix& aug, std::int32_t col) noex
     float4x4 result;
     for (std::int32_t i = 0; i < 4; ++i)
         for (std::int32_t j = 0; j < 4; ++j)
-            result[i][j] = aug.rows[i][j + 4];
+            result[i][j] = aug.rows[i][j + matrixCols];
     return result;
 }
 
@@ -345,7 +348,7 @@ inline constexpr void eliminateRows(AugmentedMatrix& aug, std::int32_t col) noex
     for (std::int32_t col = 0; col < 4; ++col) {
         const std::int32_t pivot = detail::partialPivot(aug, col);
         if (pivot != col)
-            for (std::int32_t k = 0; k < 8; ++k)
+            for (std::int32_t k = 0; k < detail::augmentedCols; ++k)
                 std::swap(aug.rows[col][k], aug.rows[pivot][k]);
         if (std::abs(aug.rows[col][col]) < kSingularEpsilon)
             return float4x4::identity();
