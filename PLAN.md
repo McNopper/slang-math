@@ -29,16 +29,22 @@ in the sibling clones.
 
 ## At a glance
 
-- **Release:** v0.5.0 (tag-synced with GitHub) - SM4 transform builders
+- **Release:** v0.6.0 (tag-synced with GitHub) - SM1 common-function batch
+  (scalar+vec `sign`/`frac`/`rsqrt`/`step`; vec-only `floor`/`ceil`/`trunc`/`round`/`fmod`/
+  `fma`/`exp2`/`log2`/`log10` + `pow(V,V)`; classification `any_nan`/`any_inf`/`all_finite`;
+  80/80 ctest).
+- **Prior:** v0.5.0 - SM4 transform builders
   (`trs` / `ortho` / `inverseOrtho` with round-trip tests; 70/70 ctest).
 - **Prior:** v0.4.0 - `sm::saturate` (canonical Slang/HLSL
   clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows
   looped). The SM6 shader-migration gate downstream is now satisfied.
 - **Quality gates:** blocking lint (Q2-Q6) + **blocking coverage CI** (`coverage (Q1)`
   job, llvm-cov: 90.74% regions / 86.68% lines).
-- **Next:** SM6 adoption lands downstream (Aether, then Harmonia/Theia) against
-  this tag; slang-math itself is stable. X-01 (canonical `check_tidy.py`) deferred -
-  possibly a separate quality repo later.
+- **Next:** SM2 trig + geometric completion → **v0.7.0** (minor, per the incremental
+  release policy), then SM3. SM6 adoption lands downstream against released tags
+  (Harmonia's slice is already swept — zero migratable sites; the remainder was
+  upstream-blocked until now and unlocks with v0.6.0). X-01 (canonical `check_tidy.py`)
+  deferred - possibly a separate quality repo later.
 ## How to continue
 
 ### slang-math function-parity track (SM)
@@ -59,24 +65,28 @@ of scope by design (slang-math is header-only and constexpr-friendly).
 
 | ID | Task | Deps | Status |
 |----|------|------|--------|
-| SM1 (v0.3.0) | **Common-function batch** — `saturate`, `sign`, `floor`/`ceil`/`round`/`trunc`/`frac`/`fmod`, `rsqrt`, `fma`, `isnan`/`isinf`/`isfinite` (vec), `exp2`/`log2`/`log10`, per-component `pow(V,V)`, `step`, vector `smoothstep` (today scalar-only) — all in `functions.hpp`. | — | backlog |
+| SM1 | **Common-function batch** — scalar+vec `sign`/`frac`/`rsqrt`/`step` (collision-free names); vec-only `floor`/`ceil`/`trunc`/`round`/`fmod`/`fma`/`exp2`/`log2`/`log10` + per-component `pow(V,V)` (C-library collisions — scalar stays `std::`); classification as **`any_nan`/`any_inf`/`all_finite`** (`isnan`/`isinf`/`isfinite` are C-runtime-owned: UCRT global unconstrained templates collide even for vector args — the documented Slang-naming fallback). 10 contract tests; 80/80 ctest. | — | **done (v0.6.0)** |
 | SM2 (v0.3.0) | **Trig + geometric completion** — `sin`/`tan`/`asin`/`acos`/`atan`/`atan2` (vec), `faceforward`, `refract` (zero-vector-on-TIR). | — | backlog |
 | SM3 (v0.3.0) | **Matrix/quaternion completeness** — `determinant(float4x4)` (cofactor expansion; 2×2/3×3 exist), `v*M` row-vector ops for `float2x2`/`float3x3` (float4x4 has it, `float4x4.hpp:70`), `toFloat3x3(quaternion)` (symmetry with `toFloat4x4`), `toQuaternion(float3x3)` (Shepperd's method; TRS-decompose prerequisite for the family's animation track). | — | backlog |
-| SM4 | **Transform builders** — `trs(t, q, s)` compose (the `Harmonia/src/harmonia/scene/Geometry.cpp:97` T·R·S pattern; feeds the node-hierarchy work NH2 in Harmonia/PLAN.md), `ortho` + `inverseOrtho` (RH ZO depth, symmetric with the `perspective`/`inversePerspective` pair). | — | backlog |
-| SM5 (v0.3.0) | **Docs + release** — AGENTS.md `float_vec` enumeration refresh, version **0.3.0** shipped; **v0.4.0** followed with `saturate` (minor bump, API additions; **v0.3.0 was already consumed by the alias/tooling release**), test-per-function per the repo contract, `verify-full` clean. *(README refresh — types/functions tables, test count — already done.)* | SM1–SM4 | backlog |
+| SM4 | **Transform builders** — `trs(t, q, s)` compose (the `Harmonia/src/harmonia/scene/Geometry.cpp:97` T·R·S pattern; feeds the node-hierarchy work NH2 in Harmonia/PLAN.md), `ortho` + `inverseOrtho` (RH ZO depth, symmetric with the `perspective`/`inversePerspective` pair). | — | **done (v0.5.0)** |
+| SM5 | **Docs + release per batch** — AGENTS.md `float_vec` enumeration + the scalar/vector collision rule refreshed with SM1; README tables track the shipped set. Batches release incrementally as minors: v0.5.0 (SM4), v0.6.0 (SM1), v0.7.0 planned (SM2). | per batch | **done (v0.6.0)** |
 | SM6 | **Downstream migration** (post-tag) — replace hand-rolled downstream code with the new functions (saturate sites, dead `Math::isNanOrInf`, duplicate `kPi` constants, `IblProbe` hand-rolled `Mat3` → `sm::float3x3`, `Geometry.cpp` TRS → `sm::trs`, test-mirror `rsqrt`/`saturate` cleanup). **Tracked in the downstream repos** — Aether/Harmonia/Hyperion/Theia each carry their slice in their own PLAN.md; this repo's part ends at tagging v0.3.0. | SM5, v0.3.0 tag | backlog |
 
-SM1–SM5 ship as **one release (slang-math v0.3.0)** — the split is for readability, not
-sequencing; SM6 is the deliberate follow-up (deferred by scope decision: the
-implementation stays inside slang-math).
+The SM batches ship as **incremental minors** per the family release policy (v0.5.0 SM4,
+v0.6.0 SM1, v0.7.0 SM2 planned) — not hoarded into one release; SM6 is the downstream
+follow-up (tracked in the renderers' own PLANs).
 
 **Design decisions (locked):** naming = HLSL/Slang spelling (`frac`, `fma`, `rsqrt` — never
 the glm `fract`/`inversesqrt`; no aliases per the repo's one-canonical-name rule). Scalar
-overloads only where `std::` has no equivalent (`saturate`, `sign`, `frac`, `rsqrt`) — scalar
-floor/round/trig stay with `std::`, matching the existing `abs`/`sqrt`/`cos` vector-only
-precedent and avoiding `using namespace` ambiguity. Vector ops are `float_vec`-generic
-(float2/3/4 inherit automatically). `isnan`/`isinf` return true if **any** component matches;
-`isfinite` true only if **all** components are finite (validation semantics; vector-only).
+overloads only where `std::` has no equivalent (`saturate`, `sign`, `frac`, `rsqrt`, `step`) —
+scalar floor/round/trig stay with `std::`, matching the existing `abs`/`sqrt`/`cos` vector-only
+precedent and avoiding `using namespace` ambiguity (probe-verified: `<cmath>` injects global
+float overloads). Vector ops are `float_vec`-generic
+(float2/3/4 inherit automatically). The classification helpers ship as `any_nan`/`any_inf`
+(true if **any** component matches) and `all_finite` (true only if **all** components are
+finite; validation semantics; vector-only) — the Slang spellings `isnan`/`isinf`/`isfinite`
+are unshippable: the UCRT declares unconstrained global templates that collide with any
+`sm::` overload of those names (probe-verified, clang-cl / MSVC 14.51).
 Documented edge semantics: `sign(0) == 0`; `frac(x) = x − floor(x)`; `fmod` truncated (sign
 follows dividend); `round` half away from zero; `refract` returns the zero vector on TIR;
 `toQuaternion` requires an orthonormal rotation matrix.
@@ -108,7 +118,8 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
-- **v0.5.0** (current): **SM4 transform builders** - `trs(t, q, s)` compose, `ortho` + `inverseOrtho` (RH ZO), 6 round-trip/identity tests; 70/70 ctest, arch gate clean.
+- **v0.6.0** (current): **SM1 common-function batch** - scalar+vec `sign`/`frac`/`rsqrt`/`step`; vec-only `floor`/`ceil`/`trunc`/`round`/`fmod`/`fma`/`exp2`/`log2`/`log10` + per-component `pow(V,V)`; classification `any_nan`/`any_inf`/`all_finite` (UCRT name-collision fallback, probe-verified). 10 new contract tests; 80/80 ctest; AGENTS.md enumeration + collision rule refreshed.
+- **v0.5.0**: **SM4 transform builders** - `trs(t, q, s)` compose, `ortho` + `inverseOrtho` (RH ZO), 6 round-trip/identity tests; 70/70 ctest, arch gate clean.
 - **v0.4.0**: **`sm::saturate`** (canonical Slang/HLSL clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows looped) + the family quality gates (blocking lint, blocking coverage CI: 90.74% regions / 86.68% lines). 64/64 ctest.
 - **v0.3.2**: **Q1 coverage lane.** `<SLANGMATH>_COVERAGE` CMake option
   (clang: `-fprofile-instr-generate -fcoverage-mapping`, gcc: `--coverage`; clang-cl links

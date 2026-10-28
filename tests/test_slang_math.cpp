@@ -1,6 +1,7 @@
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <limits>
 #include <slang-math/slang-math.hpp>
 
 using namespace sm;
@@ -656,4 +657,89 @@ TEST(UintFunctions, MinMaxClampDotValuePtr) {
     const std::uint32_t* p = value_ptr(v);
     EXPECT_EQ(p[0], 7u);
     EXPECT_EQ(p[2], 9u);
+}
+
+// ── Common functions (SM1) ───────────────────────────────────────────────────
+
+TEST(CommonFunctions, SignScalarAndVector) {
+    EXPECT_EQ(sign(-3.5f), -1.f);
+    EXPECT_EQ(sign(3.5f), 1.f);
+    EXPECT_EQ(sign(0.f), 0.f);
+    EXPECT_EQ(sign(-0.f), 0.f);
+    EXPECT_EQ(sign(std::numeric_limits<float>::quiet_NaN()), 0.f);
+    EXPECT_TRUE(near(sign(float3{-3.f, 0.f, 2.f}), float3{-1.f, 0.f, 1.f}));
+}
+
+TEST(CommonFunctions, FloorCeilTruncRoundVector) {
+    EXPECT_TRUE(near(floor(float2{2.7f, -2.1f}), float2{2.f, -3.f}));
+    EXPECT_TRUE(near(ceil(float2{2.1f, -2.7f}), float2{3.f, -2.f}));
+    EXPECT_TRUE(near(trunc(float3{2.7f, -2.7f, 0.9f}), float3{2.f, -2.f, 0.f}));
+    EXPECT_TRUE(near(round(float2{2.4f, 2.5f}), float2{2.f, 3.f}));
+    EXPECT_TRUE(near(round(float2{2.5f, -2.5f}), float2{3.f, -3.f})); // half away from zero
+    EXPECT_TRUE(near(round(float4{2.6f, -2.4f, 0.5f, -0.5f}), float4{3.f, -2.f, 1.f, -1.f}));
+}
+
+TEST(CommonFunctions, FracScalarAndVector) {
+    EXPECT_FLOAT_EQ(frac(2.75f), 0.75f);
+    EXPECT_FLOAT_EQ(frac(-1.25f), 0.75f);
+    for (const float x : {-1.25f, 0.f, 0.5f, 3.99f, 7.f}) {
+        const float f = frac(x);
+        EXPECT_GE(f, 0.f);
+        EXPECT_LT(f, 1.f);
+        EXPECT_FLOAT_EQ(std::floor(x) + f, x); // x == floor(x) + frac(x)
+    }
+    EXPECT_TRUE(near(frac(float2{2.75f, -1.25f}), float2{0.75f, 0.75f}));
+}
+
+TEST(CommonFunctions, FmodVectorSignFollowsDividend) {
+    EXPECT_TRUE(near(fmod(float2{5.5f, -5.5f}, float2{2.f, 2.f}), float2{1.5f, -1.5f}));
+    EXPECT_TRUE(near(fmod(float2{5.5f, 5.5f}, float2{2.f, -2.f}), float2{1.5f, 1.5f}));
+}
+
+TEST(CommonFunctions, RsqrtScalarAndVector) {
+    EXPECT_FLOAT_EQ(rsqrt(4.f), 0.5f);
+    EXPECT_NEAR(rsqrt(2.f) * std::sqrt(2.f), 1.f, 1e-6f);
+    EXPECT_TRUE(near(rsqrt(float3{1.f, 4.f, 0.25f}), float3{1.f, 0.5f, 2.f}));
+    const float3 reciprocal = rsqrt(float3{2.f, 2.f, 2.f});
+    EXPECT_NEAR(reciprocal.x * std::sqrt(2.f), 1.f, 1e-6f);
+}
+
+TEST(CommonFunctions, FmaVector) {
+    EXPECT_TRUE(
+        near(fma(float3{2.f, -2.f, 0.5f}, float3{3.f, 3.f, 4.f}, float3{1.f, 1.f, 1.f}), float3{7.f, -5.f, 3.f}));
+}
+
+TEST(CommonFunctions, StepScalarAndVector) {
+    EXPECT_FLOAT_EQ(step(1.f, 0.5f), 0.f);
+    EXPECT_FLOAT_EQ(step(1.f, 1.f), 1.f);
+    EXPECT_FLOAT_EQ(step(1.f, 1.5f), 1.f);
+    EXPECT_TRUE(near(step(float2{1.f, 2.f}, float2{0.5f, 2.5f}), float2{0.f, 1.f}));
+}
+
+TEST(CommonFunctions, Exp2Log2Log10Vector) {
+    EXPECT_TRUE(near(exp2(float2{1.f, 3.f}), float2{2.f, 8.f}));
+    EXPECT_TRUE(near(log2(float2{2.f, 8.f}), float2{1.f, 3.f}));
+    EXPECT_TRUE(near(log10(float3{10.f, 100.f, 1000.f}), float3{1.f, 2.f, 3.f}));
+    EXPECT_TRUE(near(log2(exp2(float2{7.5f, -2.f})), float2{7.5f, -2.f}));
+    EXPECT_TRUE(near(exp2(log2(float3{5.f, 0.1f, 123.f})), float3{5.f, 0.1f, 123.f}));
+}
+
+TEST(CommonFunctions, PowVectorExponent) {
+    const float3 base{2.f, 4.f, 8.f};
+    const float3 exponent{2.f, 0.5f, 3.f};
+    EXPECT_TRUE(near(pow(base, exponent), float3{4.f, 2.f, 512.f}));
+    EXPECT_TRUE(near(pow(base, float3{2.f, 2.f, 2.f}), pow(base, 2.f))); // V,V vs V,float
+}
+
+TEST(CommonFunctions, ClassificationVector) {
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    const float inf = std::numeric_limits<float>::infinity();
+    EXPECT_TRUE(any_nan(float4{1.f, nan, 2.f, 3.f})); // any component
+    EXPECT_FALSE(any_nan(float4{1.f, 2.f, 3.f, 4.f}));
+    EXPECT_TRUE(any_inf(float3{inf, 1.f, 2.f}));
+    EXPECT_TRUE(any_inf(float3{1.f, -inf, 2.f}));
+    EXPECT_FALSE(any_inf(float3{1.f, 2.f, 3.f}));
+    EXPECT_TRUE(all_finite(float3{1.f, 2.f, 3.f}));
+    EXPECT_FALSE(all_finite(float3{1.f, inf, 3.f}));
+    EXPECT_FALSE(all_finite(float2{1.f, nan}));
 }

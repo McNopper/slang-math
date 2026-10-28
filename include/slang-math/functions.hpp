@@ -194,6 +194,174 @@ template <float_vec V> [[nodiscard]] inline V pow(const V& v, float p) noexcept 
     return r;
 }
 
+// ── Common functions (SM1) ──
+
+// Scalar + vector pairs ship for collision-free names (sign, frac, rsqrt,
+// step). Names colliding with <cmath>'s global float overloads (floor, ceil,
+// trunc, round, fmod, fma, exp2, log2, log10 — like sqrt, exp, cos, log above)
+// are VECTOR-ONLY: an unqualified scalar call would be ambiguous; scalar
+// callers use std::. The C-runtime-owned names isnan/isinf/isfinite are
+// unshippable even for vectors (the UCRT declares unconstrained global
+// templates), so the classification helpers carry contract names instead:
+// any_nan / any_inf / all_finite.
+
+/// Sign: -1 if x < 0, +1 if x > 0, 0 if x == 0 (NaN yields 0).
+[[nodiscard]] inline float sign(float x) noexcept {
+    return (x > 0.f) - (x < 0.f);
+}
+template <float_vec V> [[nodiscard]] inline V sign(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = (v[i] > 0.f) - (v[i] < 0.f);
+    return r;
+}
+
+/// Fractional part: x - floor(x), in [0, 1) for finite x.
+[[nodiscard]] inline float frac(float x) noexcept {
+    return x - std::floor(x);
+}
+template <float_vec V> [[nodiscard]] inline V frac(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = v[i] - std::floor(v[i]);
+    return r;
+}
+
+/// Reciprocal square root: 1 / sqrt(x).  x > 0 for a finite result.
+[[nodiscard]] inline float rsqrt(float x) noexcept {
+    return 1.f / std::sqrt(x);
+}
+template <float_vec V> [[nodiscard]] inline V rsqrt(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = 1.f / std::sqrt(v[i]);
+    return r;
+}
+
+/// Step: 0 if x < edge, else 1.
+[[nodiscard]] inline float step(float edge, float x) noexcept {
+    return x < edge ? 0.f : 1.f;
+}
+template <float_vec V> [[nodiscard]] inline V step(const V& edge, const V& x) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = x[i] < edge[i] ? 0.f : 1.f;
+    return r;
+}
+
+/// Floor, component-wise. (Vector-only — scalar callers: std::floor.)
+template <float_vec V> [[nodiscard]] inline V floor(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::floor(v[i]);
+    return r;
+}
+
+/// Ceiling, component-wise. (Vector-only — scalar callers: std::ceil.)
+template <float_vec V> [[nodiscard]] inline V ceil(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::ceil(v[i]);
+    return r;
+}
+
+/// Truncate (round toward zero), component-wise.
+/// (Vector-only — scalar callers: std::trunc.)
+template <float_vec V> [[nodiscard]] inline V trunc(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::trunc(v[i]);
+    return r;
+}
+
+/// Round to the nearest integer, half away from zero (matching std::round),
+/// component-wise. (Vector-only — scalar callers: std::round.)
+template <float_vec V> [[nodiscard]] inline V round(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::round(v[i]);
+    return r;
+}
+
+/// Floating-point modulo x - y * trunc(x / y); the sign follows x,
+/// component-wise. (Vector-only — scalar callers: std::fmod.)
+template <float_vec V> [[nodiscard]] inline V fmod(const V& x, const V& y) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::fmod(x[i], y[i]);
+    return r;
+}
+
+/// Fused multiply-add a * b + c, component-wise.
+/// (Vector-only — scalar callers: std::fma.)
+template <float_vec V> [[nodiscard]] inline V fma(const V& a, const V& b, const V& c) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::fma(a[i], b[i], c[i]);
+    return r;
+}
+
+/// Base-2 exponential, component-wise.
+/// (Vector-only — scalar callers: std::exp2.)
+template <float_vec V> [[nodiscard]] inline V exp2(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::exp2(v[i]);
+    return r;
+}
+
+/// Base-2 logarithm (x > 0 for a finite result), component-wise.
+/// (Vector-only — scalar callers: std::log2.)
+template <float_vec V> [[nodiscard]] inline V log2(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::log2(v[i]);
+    return r;
+}
+
+/// Base-10 logarithm (x > 0 for a finite result), component-wise.
+/// (Vector-only — scalar callers: std::log10.)
+template <float_vec V> [[nodiscard]] inline V log10(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::log10(v[i]);
+    return r;
+}
+
+/// Per-component power: pow(base, exponent) component-wise.
+template <float_vec V> [[nodiscard]] inline V pow(const V& base, const V& exponent) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::pow(base[i], exponent[i]);
+    return r;
+}
+
+/// True when ANY component is NaN. (Contract-named: HLSL/Slang isnan is
+/// unshippable — the UCRT declares global template isnan/isinf/isfinite
+/// overloads that collide even for vector arguments.)
+template <float_vec V> [[nodiscard]] inline bool any_nan(const V& v) noexcept {
+    for (std::int32_t i = 0; i < V::size; ++i)
+        if (std::isnan(v[i]))
+            return true;
+    return false;
+}
+
+/// True when ANY component is ±infinity.
+template <float_vec V> [[nodiscard]] inline bool any_inf(const V& v) noexcept {
+    for (std::int32_t i = 0; i < V::size; ++i)
+        if (std::isinf(v[i]))
+            return true;
+    return false;
+}
+
+/// True when ALL components are finite (neither NaN nor ±infinity).
+template <float_vec V> [[nodiscard]] inline bool all_finite(const V& v) noexcept {
+    for (std::int32_t i = 0; i < V::size; ++i)
+        if (!std::isfinite(v[i]))
+            return false;
+    return true;
+}
+
 // ── Smooth-step (scalar) ───────────────────────────────────────────────────────
 
 /// Hermite smooth-step: maps [edge0, edge1] to [0, 1] with zero derivatives at edges.
