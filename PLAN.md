@@ -29,7 +29,10 @@ in the sibling clones.
 
 ## At a glance
 
-- **Release:** v0.6.0 (tag-synced with GitHub) - SM1 common-function batch
+- **Release:** v0.7.0 (tag-synced with GitHub) - SM2 trig + geometric completion
+  (vec `sin`/`tan`/`asin`/`acos`/`atan`/`atan2`, `faceforward`, `refract` with the
+  zero-vector-on-TIR contract, vector `smoothstep`; 87/87 ctest).
+- **Prior:** v0.6.0 - SM1 common-function batch
   (scalar+vec `sign`/`frac`/`rsqrt`/`step`; vec-only `floor`/`ceil`/`trunc`/`round`/`fmod`/
   `fma`/`exp2`/`log2`/`log10` + `pow(V,V)`; classification `any_nan`/`any_inf`/`all_finite`;
   80/80 ctest).
@@ -40,11 +43,10 @@ in the sibling clones.
   looped). The SM6 shader-migration gate downstream is now satisfied.
 - **Quality gates:** blocking lint (Q2-Q6) + **blocking coverage CI** (`coverage (Q1)`
   job, llvm-cov: 90.74% regions / 86.68% lines).
-- **Next:** SM2 trig + geometric completion → **v0.7.0** (minor, per the incremental
-  release policy), then SM3. SM6 adoption lands downstream against released tags
-  (Harmonia's slice is already swept — zero migratable sites; the remainder was
-  upstream-blocked until now and unlocks with v0.6.0). X-01 (canonical `check_tidy.py`)
-  deferred - possibly a separate quality repo later.
+- **Next:** SM3 matrix/quaternion completeness → **v0.8.0** (minor, per the incremental
+  release policy). SM6 trig adoption downstream (the renderers' per-component trig sites)
+  unlocks with this tag. X-01 (canonical `check_tidy.py`) deferred - possibly a separate
+  quality repo later; the new **check-dead** skill (family dead-code gate) already seeds it.
 ## How to continue
 
 ### slang-math function-parity track (SM)
@@ -118,7 +120,8 @@ never silence it). Every new function carries a round-trip or identity test (rep
 
 ## Baseline
 
-- **v0.6.0** (current): **SM1 common-function batch** - scalar+vec `sign`/`frac`/`rsqrt`/`step`; vec-only `floor`/`ceil`/`trunc`/`round`/`fmod`/`fma`/`exp2`/`log2`/`log10` + per-component `pow(V,V)`; classification `any_nan`/`any_inf`/`all_finite` (UCRT name-collision fallback, probe-verified). 10 new contract tests; 80/80 ctest; AGENTS.md enumeration + collision rule refreshed.
+- **v0.7.0** (current): **SM2 trig + geometric completion** - vec `sin`/`tan`/`asin`/`acos`/`atan`/`atan2` (b-over-a HLSL order), `faceforward`, `refract` (GLSL/HLSL-identical formula, zero vector on TIR), vector `smoothstep` (all-vector edges, scalar sibling untouched). 7 new tests; 87/87 ctest.
+- **v0.6.0**: **SM1 common-function batch** - scalar+vec `sign`/`frac`/`rsqrt`/`step`; vec-only `floor`/`ceil`/`trunc`/`round`/`fmod`/`fma`/`exp2`/`log2`/`log10` + per-component `pow(V,V)`; classification `any_nan`/`any_inf`/`all_finite` (UCRT name-collision fallback, probe-verified). 10 new contract tests; 80/80 ctest; AGENTS.md enumeration + collision rule refreshed.
 - **v0.5.0**: **SM4 transform builders** - `trs(t, q, s)` compose, `ortho` + `inverseOrtho` (RH ZO), 6 round-trip/identity tests; 70/70 ctest, arch gate clean.
 - **v0.4.0**: **`sm::saturate`** (canonical Slang/HLSL clamp-to-[0,1], scalar + all float vector sizes) + SM-02 (`translate` unrolled rows looped) + the family quality gates (blocking lint, blocking coverage CI: 90.74% regions / 86.68% lines). 64/64 ctest.
 - **v0.3.2**: **Q1 coverage lane.** `<SLANGMATH>_COVERAGE` CMake option
