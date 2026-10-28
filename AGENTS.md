@@ -55,20 +55,22 @@ pipeline currently consumes. Ship the full set for every supported scalar:
 - **Free functions are generic over C++20 concepts** (`functions.hpp`): `vec` (any component
   vector — `float2/3/4` AND `uint2/3/4`, element-agnostic) carries the type-agnostic ops
   `dot`, `min`, `max`, `clamp`, `value_ptr`; `float_vec` (refines `vec`, `value_type == float`)
-  carries the real-valued ops `length`, `normalize`, `lerp`, `abs`, `sqrt`, `exp`, `cos`, `log`,
-  `pow` (vector and vector-exponent forms), `distance`, `reflect`, `floor`, `ceil`, `trunc`,
-  `round`, `frac`, `fmod`, `rsqrt`, `fma`, `step`, `exp2`, `log2`, `log10`, `any_nan`,
-  `any_inf`, `all_finite`; `square_mat` (`float2x2/3x3/4x4`) carries `transpose` and
+  carries the real-valued ops `length`, `normalize`, `lerp`, `abs`, `sqrt`, `exp`, `cos`, `sin`,
+  `tan`, `asin`, `acos`, `atan`, `atan2`, `log`, `pow` (vector and vector-exponent forms),
+  `distance`, `reflect`, `faceforward`, `refract`, `floor`, `ceil`, `trunc`, `round`, `frac`,
+  `fmod`, `rsqrt`, `fma`, `step`, `smoothstep`, `exp2`, `log2`, `log10`, `any_nan`, `any_inf`,
+  `all_finite`; `square_mat` (`float2x2/3x3/4x4`) carries `transpose` and
   matrix×matrix `operator*`. No float3-only special cases — a new scalar's vectors inherit the
   `vec` ops automatically.
 - **Scalar/vector availability follows C-library collisions** (verified against MSVC/UCRT):
   collision-free names ship **scalar + vector pairs** (`sign`, `frac`, `rsqrt`, `step`, plus
   `clamp`, `lerp`, `saturate`, `smoothstep`). Names colliding with `<cmath>`'s global float
   overloads are **vector-only** — scalar callers use `std::` (`floor`, `ceil`, `trunc`,
-  `round`, `fmod`, `fma`, `exp2`, `log2`, `log10`, and the pre-existing `sqrt`, `exp`, `cos`,
-  `log`). The C-runtime-owned names `isnan`/`isinf`/`isfinite` are unshippable even for
-  vectors (the UCRT declares unconstrained global templates that deduce on any type); the
-  classification trio ships under contract names `any_nan` / `any_inf` / `all_finite`.
+  `round`, `fmod`, `fma`, `exp2`, `log2`, `log10`, the trig set `sin`/`tan`/`asin`/`acos`/
+  `atan`/`atan2`, and the pre-existing `sqrt`, `exp`, `cos`, `log`). The C-runtime-owned
+  names `isnan`/`isinf`/`isfinite` are unshippable even for vectors (the UCRT declares
+  unconstrained global templates that deduce on any type); the classification trio ships
+  under contract names `any_nan` / `any_inf` / `all_finite`.
 - **Sized integers only** — use `std::int32_t` / `std::uint32_t` (never bare `int`/`unsigned`)
   for stored members, dimensions (`static constexpr std::int32_t size`), and index/signature
   types. Vector elements keep their natural width (`float`; `uint32_t` for `uintN`).

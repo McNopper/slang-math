@@ -743,3 +743,107 @@ TEST(CommonFunctions, ClassificationVector) {
     EXPECT_FALSE(all_finite(float3{1.f, inf, 3.f}));
     EXPECT_FALSE(all_finite(float2{1.f, nan}));
 }
+
+// ── Trig + geometric (SM2) ───────────────────────────────────────────────────
+
+TEST(TrigVector, SinTanAtanKnownValues) {
+    const float p6 = pi<float>() / 6.f;
+    const float p4 = pi<float>() / 4.f;
+    const float3 angles{0.f, p6, p4};
+    EXPECT_NEAR(sin(angles).x, 0.f, kEps);
+    EXPECT_NEAR(sin(angles).y, 0.5f, kEps);
+    EXPECT_NEAR(sin(angles).z, 0.7071068f, kEps);
+    const float2 quarter{0.f, p4};
+    EXPECT_NEAR(tan(quarter).x, 0.f, kEps);
+    EXPECT_NEAR(tan(quarter).y, 1.f, kEps);
+    const float2 unit{0.f, 1.f};
+    EXPECT_NEAR(atan(unit).x, 0.f, kEps);
+    EXPECT_NEAR(atan(unit).y, p4, kEps); // atan(1) == pi/4
+    const float4 zeros{0.f, 0.f, 0.f, 0.f};
+    EXPECT_NEAR(sin(zeros).w, 0.f, kEps);
+    EXPECT_NEAR(tan(zeros).w, 0.f, kEps);
+}
+
+TEST(TrigVector, AsinAcosRoundTrips) {
+    const float3 x{-1.2f, 0.4f, 1.5f}; // within [-pi/2, pi/2]
+    EXPECT_TRUE(near(asin(sin(x)), x));
+    const float3 y{0.3f, 1.5f, 3.0f}; // within [0, pi]
+    EXPECT_TRUE(near(acos(cos(y)), y));
+    const float2 ends{1.f, -1.f};
+    EXPECT_NEAR(asin(ends).x, pi<float>() / 2.f, kEps);
+    EXPECT_NEAR(asin(ends).y, -pi<float>() / 2.f, kEps);
+    EXPECT_NEAR(acos(ends).x, 0.f, kEps);
+    EXPECT_NEAR(acos(ends).y, pi<float>(), kEps);
+}
+
+TEST(TrigVector, Atan2Quadrants) {
+    const float p4 = pi<float>() / 4.f;
+    const float3 b{0.f, 1.f, 1.f};
+    const float3 a{1.f, 1.f, -1.f};
+    const float3 r = atan2(b, a);
+    EXPECT_NEAR(r.x, 0.f, kEps);      // atan2(0, 1)
+    EXPECT_NEAR(r.y, p4, kEps);       // atan2(1, 1)
+    EXPECT_NEAR(r.z, 3.f * p4, kEps); // atan2(1, -1)
+    const float2 b2{0.f, -1.f};
+    const float2 a2{-1.f, 1.f};
+    const float2 r2 = atan2(b2, a2);
+    EXPECT_NEAR(r2.x, pi<float>(), kEps); // atan2(0, -1)
+    EXPECT_NEAR(r2.y, -p4, kEps);         // atan2(-1, 1)
+}
+
+TEST(GeometryVector, FaceForward) {
+    const float3 n{0.f, 1.f, 0.f};
+    const float3 i{0.f, -1.f, 0.f}; // incident, pointing into the surface
+    // nref already against i (dot(nref, i) = -1 < 0): n returned unchanged.
+    EXPECT_TRUE(near(faceforward(n, i, float3{0.f, 1.f, 0.f}), n));
+    // nref aligned with i (dot(nref, i) = +1 > 0): n flipped.
+    EXPECT_TRUE(near(faceforward(n, i, float3{0.f, -1.f, 0.f}), -n));
+    // float2 genericity: dot(nref, i) < 0 keeps n.
+    EXPECT_EQ(faceforward(float2{3.f, 4.f}, float2{1.f, 0.f}, float2{-1.f, 0.f}), (float2{3.f, 4.f}));
+}
+
+TEST(GeometryVector, RefractNormalIncidenceAndTIR) {
+    // Sign convention: i points INTO the surface, n points back against i.
+    // Normal incidence with eta = 1: k = 1 -> refracted == incident (no deflection).
+    EXPECT_TRUE(near(refract(float3{0.f, 0.f, -1.f}, float3{0.f, 0.f, 1.f}, 1.f), (float3{0.f, 0.f, -1.f})));
+    // Dense -> rare beyond the critical angle: 60 deg with eta = 1.5 gives
+    // k = 1 - 1.5^2 * (1 - cos^2(60 deg)) = -0.6875 < 0 -> total internal reflection -> zero vector.
+    const float3 grazing{std::sin(radians(60.f)), 0.f, -std::cos(radians(60.f))};
+    EXPECT_EQ(refract(grazing, float3{0.f, 0.f, 1.f}, 1.5f), (float3{0.f, 0.f, 0.f}));
+}
+
+TEST(GeometryVector, RefractGlass45Degrees) {
+    // Air -> glass, 45 deg incidence (eta = 1/1.5): sin(theta_t) = sin(45 deg) / 1.5.
+    const float s45 = std::sin(radians(45.f));
+    const float3 i{s45, 0.f, -s45}; // unit incident, 45 deg from the +z normal
+    const float3 t = refract(i, float3{0.f, 0.f, 1.f}, 1.f / 1.5f);
+    const float sT = s45 / 1.5f;
+    const float cT = std::sqrt(1.f - sT * sT);
+    EXPECT_TRUE(near(t, (float3{sT, 0.f, -cT}), 1e-5f));
+    EXPECT_NEAR(length(t), 1.f, 1e-5f); // transmitted ray stays unit
+}
+
+TEST(SmoothstepVector, EdgesMidpointMonotonicScalarConsistency) {
+    const float3 e0{0.f, -1.f, 2.f};
+    const float3 e1{1.f, 1.f, 4.f};
+    const float3 belowMid = smoothstep(e0, e1, float3{-2.f, -1.f, 3.f});
+    EXPECT_NEAR(belowMid.x, 0.f, kEps);  // below edge0 clamps to 0
+    EXPECT_NEAR(belowMid.y, 0.f, kEps);  // at edge0
+    EXPECT_NEAR(belowMid.z, 0.5f, kEps); // midpoint
+    const float3 atAndAbove = smoothstep(e0, e1, float3{1.f, 5.f, 9.f});
+    EXPECT_NEAR(atAndAbove.x, 1.f, kEps); // at edge1
+    EXPECT_NEAR(atAndAbove.y, 1.f, kEps); // above edge1 clamps to 1
+    EXPECT_NEAR(atAndAbove.z, 1.f, kEps);
+    // Monotone non-decreasing in x.
+    float prev = 0.f;
+    for (std::int32_t s = 0; s <= 10; ++s) {
+        const float u = static_cast<float>(s) / 10.f;
+        const float v = smoothstep(float2{0.f, 0.f}, float2{1.f, 1.f}, float2{u, u}).x;
+        EXPECT_GE(v, prev - 1e-6f);
+        prev = v;
+    }
+    // Matches the scalar overload per component.
+    const float3 xs{-0.25f, 0.4f, 1.7f};
+    EXPECT_TRUE(near(smoothstep(float3{0.f, 0.f, 0.f}, float3{1.f, 1.f, 1.f}, xs),
+                     (float3{smoothstep(0.f, 1.f, xs.x), smoothstep(0.f, 1.f, xs.y), smoothstep(0.f, 1.f, xs.z)})));
+}

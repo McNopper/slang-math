@@ -161,7 +161,7 @@ template <float_vec V> [[nodiscard]] inline V abs(const V& v) noexcept {
     return r;
 }
 
-// ── Component-wise elementary functions (real-valued only) ─────────────────────
+// ── Component-wise elementary + trig functions (real-valued only) ──────────────
 
 template <float_vec V> [[nodiscard]] inline V sqrt(const V& v) noexcept {
     V r{};
@@ -191,6 +191,54 @@ template <float_vec V> [[nodiscard]] inline V pow(const V& v, float p) noexcept 
     V r{};
     for (std::int32_t i = 0; i < V::size; ++i)
         r[i] = std::pow(v[i], p);
+    return r;
+}
+
+/// Sine, component-wise. (Vector-only — scalar callers: std::sin.)
+template <float_vec V> [[nodiscard]] inline V sin(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::sin(v[i]);
+    return r;
+}
+
+/// Tangent, component-wise. (Vector-only — scalar callers: std::tan.)
+template <float_vec V> [[nodiscard]] inline V tan(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::tan(v[i]);
+    return r;
+}
+
+/// Arc sine to [-pi/2, pi/2] (|x| <= 1), component-wise. (Vector-only — scalar callers: std::asin.)
+template <float_vec V> [[nodiscard]] inline V asin(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::asin(v[i]);
+    return r;
+}
+
+/// Arc cosine to [0, pi] (|x| <= 1), component-wise. (Vector-only — scalar callers: std::acos.)
+template <float_vec V> [[nodiscard]] inline V acos(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::acos(v[i]);
+    return r;
+}
+
+/// Arc tangent to [-pi/2, pi/2], component-wise. (Vector-only — scalar callers: std::atan.)
+template <float_vec V> [[nodiscard]] inline V atan(const V& v) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::atan(v[i]);
+    return r;
+}
+
+/// Arc tangent of b/a, quadrant from the signs of both, component-wise. (Vector-only — scalar callers: std::atan2.)
+template <float_vec V> [[nodiscard]] inline V atan2(const V& b, const V& a) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i)
+        r[i] = std::atan2(b[i], a[i]);
     return r;
 }
 
@@ -362,7 +410,7 @@ template <float_vec V> [[nodiscard]] inline bool all_finite(const V& v) noexcept
     return true;
 }
 
-// ── Smooth-step (scalar) ───────────────────────────────────────────────────────
+// ── Smooth-step (scalar + vector) ──────────────────────────────────────────────
 
 /// Hermite smooth-step: maps [edge0, edge1] to [0, 1] with zero derivatives at edges.
 [[nodiscard]] inline float smoothstep(float edge0, float edge1, float x) noexcept {
@@ -370,7 +418,17 @@ template <float_vec V> [[nodiscard]] inline bool all_finite(const V& v) noexcept
     return t * t * (3.f - 2.f * t);
 }
 
-// ── Distance / Reflect (real-valued only) ─────────────────────────────────────
+/// Hermite smooth-step, component-wise: maps [edge0, edge1] to [0, 1] per component.
+template <float_vec V> [[nodiscard]] inline V smoothstep(const V& edge0, const V& edge1, const V& x) noexcept {
+    V r{};
+    for (std::int32_t i = 0; i < V::size; ++i) {
+        const float t = clamp((x[i] - edge0[i]) / (edge1[i] - edge0[i]), 0.f, 1.f);
+        r[i] = t * t * (3.f - 2.f * t);
+    }
+    return r;
+}
+
+// ── Distance / Reflect / Refract (real-valued only) ───────────────────────────
 
 template <float_vec V> [[nodiscard]] inline float distance(const V& a, const V& b) noexcept {
     return length(b - a);
@@ -379,6 +437,21 @@ template <float_vec V> [[nodiscard]] inline float distance(const V& a, const V& 
 /// Reflect incident vector `i` about unit normal `n`:  i - 2*dot(i,n)*n
 template <float_vec V> [[nodiscard]] inline constexpr V reflect(const V& i, const V& n) noexcept {
     return i - 2.f * dot(i, n) * n;
+}
+
+/// Flip `n` to face incident `i`: dot(nref, i) < 0 ? n : -n (HLSL faceforward semantics).
+template <float_vec V> [[nodiscard]] inline V faceforward(const V& n, const V& i, const V& nref) noexcept {
+    return dot(nref, i) < 0.f ? n : -n;
+}
+
+/// Refract incident vector `i` through unit normal `n` with eta = ni/nt (scalar).
+/// Total internal reflection (k = 1 - eta²(1 - dot(n,i)²) < 0) returns the ZERO vector.
+template <float_vec V> [[nodiscard]] inline V refract(const V& i, const V& n, float eta) noexcept {
+    const float d = dot(n, i);
+    const float k = 1.f - eta * eta * (1.f - d * d);
+    if (k < 0.f)
+        return V{};
+    return eta * i - (eta * d + std::sqrt(k)) * n;
 }
 
 // ── Matrix operations ─────────────────────────────────────────────────────────
