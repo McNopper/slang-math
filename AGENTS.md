@@ -127,7 +127,11 @@ builds the instrumented tree, runs the tests with `LLVM_PROFILE_FILE` set, merge
 profiles and prints the llvm-cov report for `src/` (gcc builds report via gcov; exit 77
 when the LLVM tools are missing). Wired into CI as a report-only `coverage (Q1)` job (ubuntu-26.04, clang + llvm tools, `continue-on-error` while it stabilizes) - the CPU suite runs in CI, so the report measures real coverage.
 
-**Sanitizer lane (Clang/GCC configures only):** `-DSLANGMATH_SANITIZER=address|undefined|thread`. Host-side FP is deterministic
+**
+
+**Dead-code gate:** `python tools/check_dead.py` - orphan headers, never-compiled sources (absent from `compile_commands.json` AND unreferenced by any CMake file), and FetchContent declare/consume mismatches. Also registered as ctest `test_dead` (label `analysis`; local only - registration is gated on the per-user check-dead skill install, so CI runners skip it). Justified findings go into `tools/check_dead.exceptions` with a reason; real dead code is deleted in a fix commit.
+
+Sanitizer lane (Clang/GCC configures only):** `-DSLANGMATH_SANITIZER=address|undefined|thread`. Host-side FP is deterministic
 (`/fp:strict` / `-ffp-contract=off -fno-fast-math`).
 
 Tests (`tests/test_slang_math.cpp`, GoogleTest via FetchContent) are the contract: every function
