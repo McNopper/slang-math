@@ -86,14 +86,28 @@ pack_matrix(row_major)` directive), the CPU and GPU byte layout are identical.  
 | `sm::exp(v)` | Component-wise eˣ |
 | `sm::cos(v)` | Component-wise cosine |
 | `sm::log(v)` | Component-wise natural logarithm |
-| `sm::pow(v, p)` | Component-wise power (scalar exponent) |
+| `sm::pow(v, p)` | Component-wise power (scalar and vector exponent) |
+| `sm::floor/ceil/trunc/round(v)` | Component-wise rounding (vector-only; scalar callers: `std::`) |
+| `sm::frac(x)` | Fractional part `x - floor(x)` (scalar and vector) |
+| `sm::fmod(x, y)` | Component-wise modulo, sign follows the dividend (vector-only) |
+| `sm::rsqrt(x)` | Reciprocal square root (scalar and vector) |
+| `sm::fma(a, b, c)` | Fused multiply-add (vector-only) |
+| `sm::exp2/log2/log10(v)` | Component-wise base-2/10 exponentials and logarithms (vector-only) |
+| `sm::any_nan(v)` / `sm::any_inf(v)` | True when ANY component is NaN / ±infinity |
+| `sm::all_finite(v)` | True when ALL components are finite |
+| `sm::saturate(x)` | Clamp to [0, 1] (canonical Slang/HLSL name; scalar and vector) |
 | `sm::transpose(m)` | Matrix transpose (all square sizes) |
+| `v * m` | Row-vector times matrix, `mul(v, M)` (all square sizes) |
 | `sm::inverse(m)` | Matrix inverse (closed form 2×2, Cramer 3×3, Gauss-Jordan 4×4) |
 | `sm::inverseTranspose(m)` | `transpose(inverse(m))` — normal matrix |
-| `sm::determinant(m)` | 2×2 / 3×3 determinant |
+| `sm::determinant(m)` | 2×2 / 3×3 / 4×4 determinant (4×4 cofactor expansion) |
 | `sm::toFloat2x2(m)` | Upper-left 2×2 extraction (from 3×3 / 4×4) |
 | `sm::toFloat3x3(float4x4)` | Upper-left 3×3 extraction |
-| `sm::smoothstep(e0, e1, x)` | Hermite smooth-step (scalar) |
+| `sm::smoothstep(e0, e1, x)` | Hermite smooth-step (scalar and vector) |
+| `sm::sin/tan/asin/acos/atan(v)` | Component-wise trig (vector-only; scalar callers: `std::`) |
+| `sm::atan2(b, a)` | Component-wise 2-argument arctangent, b-over-a (vector-only) |
+| `sm::faceforward(n, i, nref)` | Flip `n` to face `i` (HLSL semantics) |
+| `sm::refract(i, n, eta)` | Refraction vector; zero vector on total internal reflection |
 | `sm::distance(a, b)` | Euclidean distance between two points |
 | `sm::value_ptr(v/m)` | `const float*` to first element (buffer upload helper) |
 
@@ -112,6 +126,8 @@ All builders assume a right-handed coordinate system and Vulkan depth range [0, 
 | `sm::rotate(m, angle, axis)` | M × R(angle, axis) — Rodrigues formula |
 | `sm::scale(m, v)` | M × S(v) |
 | `sm::toFloat4x4(q)` | Quaternion → rotation matrix |
+| `sm::toFloat3x3(q)` | Quaternion → rotation matrix (3×3) |
+| `sm::toQuaternion(m)` | Orthonormal rotation matrix → quaternion (Shepperd’s method) |
 | `sm::angleAxis(angle, axis)` | Build rotation quaternion |
 | `sm::identity<T>()` | Identity value for any matrix/quaternion type |
 
