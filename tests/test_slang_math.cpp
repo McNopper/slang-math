@@ -847,3 +847,95 @@ TEST(SmoothstepVector, EdgesMidpointMonotonicScalarConsistency) {
     EXPECT_TRUE(near(smoothstep(float3{0.f, 0.f, 0.f}, float3{1.f, 1.f, 1.f}, xs),
                      (float3{smoothstep(0.f, 1.f, xs.x), smoothstep(0.f, 1.f, xs.y), smoothstep(0.f, 1.f, xs.z)})));
 }
+
+// ── Matrix/quaternion completeness (SM3) ─────────────────────────────────────
+
+TEST(Float4x4, DeterminantKnownValues) {
+    EXPECT_NEAR(determinant(float4x4{1.f}), 1.f, kEps); // det(I4) == 1
+    // Triangular: product of the diagonal (2 * -1 * 3 * 0.5 == -3).
+    const float4x4 triangular{{2.f, 1.f, 3.f, 0.f}, {0.f, -1.f, 4.f, 5.f}, {0.f, 0.f, 3.f, 2.f}, {0.f, 0.f, 0.f, 0.5f}};
+    EXPECT_NEAR(determinant(triangular), -3.f, kEps);
+    // Hand-computed cofactor expansion along the first row (all four 3x3 minors are +-38).
+    const float4x4 m{{2.f, 1.f, 0.f, 2.f}, {4.f, 1.f, 5.f, 0.f}, {0.f, 2.f, 1.f, 1.f}, {6.f, 0.f, 2.f, 4.f}};
+    EXPECT_NEAR(determinant(m), -38.f, 1e-4f);
+    // Singular: row 1 is row 0 scaled by 2 -> det == 0.
+    const float4x4 singular{{1.f, 2.f, 3.f, 4.f}, {2.f, 4.f, 6.f, 8.f}, {0.f, 1.f, 0.f, 0.f}, {1.f, 1.f, 1.f, 1.f}};
+    EXPECT_NEAR(determinant(singular), 0.f, 1e-4f);
+}
+
+TEST(Float4x4, DeterminantMultiplicative) {
+    const float4x4 a{{2.f, 1.f, 3.f, 0.f}, {0.f, -1.f, 4.f, 5.f}, {0.f, 0.f, 3.f, 2.f}, {0.f, 0.f, 0.f, 0.5f}};
+    const float4x4 b{{2.f, 1.f, 0.f, 2.f}, {4.f, 1.f, 5.f, 0.f}, {0.f, 2.f, 1.f, 1.f}, {6.f, 0.f, 2.f, 4.f}};
+    EXPECT_NEAR(determinant(a * b), determinant(a) * determinant(b), 1e-3f); // det(AB) == det(A) * det(B)
+}
+
+TEST(Float2x2, RowVectorMultiply) {
+    const float2x2 m{{1.f, 2.f}, {3.f, 4.f}};
+    // (v * M)[j] = sum_i v[i] * M[i][j]: (5*1 + 6*3, 5*2 + 6*4).
+    EXPECT_TRUE(near(float2{5.f, 6.f} * m, float2{23.f, 34.f}));
+    // Row-vector form differs from the column-vector member form: M * v == (17, 39).
+    EXPECT_TRUE(near(m * float2{5.f, 6.f}, float2{17.f, 39.f}));
+    // Identity: v * I == v.
+    EXPECT_TRUE(near(float2{7.f, -3.f} * float2x2{1.f}, float2{7.f, -3.f}));
+    // Transpose identity: v * M == transpose(M) * v.
+    EXPECT_TRUE(near(float2{5.f, 6.f} * m, transpose(m) * float2{5.f, 6.f}));
+}
+
+TEST(Float3x3, RowVectorMultiply) {
+    const float3x3 m{{1.f, 2.f, 3.f}, {4.f, 5.f, 6.f}, {7.f, 8.f, 10.f}};
+    // (v * M)[j] = sum_i v[i] * M[i][j]: (30, 36, 45).
+    EXPECT_TRUE(near(float3{1.f, 2.f, 3.f} * m, float3{30.f, 36.f, 45.f}));
+    // Row-vector form differs from the column-vector member form: M * v == (14, 32, 53).
+    EXPECT_TRUE(near(m * float3{1.f, 2.f, 3.f}, float3{14.f, 32.f, 53.f}));
+    // Identity: v * I == v.
+    EXPECT_TRUE(near(float3{7.f, -3.f, 2.f} * float3x3{1.f}, float3{7.f, -3.f, 2.f}));
+    // Transpose identity: v * M == transpose(M) * v.
+    EXPECT_TRUE(near(float3{1.f, 2.f, 3.f} * m, transpose(m) * float3{1.f, 2.f, 3.f}));
+}
+
+TEST(Quaternion, ToFloat3x3IdentityAndAxis90) {
+    // Identity quaternion -> identity matrix.
+    EXPECT_TRUE(near(toFloat3x3(quaternion::identity()), float3x3{1.f}));
+    // The 90-degree axis rotations used by the toFloat4x4 tests, cropped to 3x3.
+    const float s = std::sqrt(0.5f); // sin/cos of 45 degrees
+    // 90 degrees about X: y -> z, z -> -y.
+    const float3x3 rx{{1.f, 0.f, 0.f}, {0.f, 0.f, -1.f}, {0.f, 1.f, 0.f}};
+    EXPECT_TRUE(near(toFloat3x3(quaternion{s, 0.f, 0.f, s}), rx, 1e-4f));
+    // 90 degrees about Y: x -> -z, z -> x.
+    const float3x3 ry{{0.f, 0.f, 1.f}, {0.f, 1.f, 0.f}, {-1.f, 0.f, 0.f}};
+    EXPECT_TRUE(near(toFloat3x3(quaternion{0.f, s, 0.f, s}), ry, 1e-4f));
+    // 90 degrees about Z: x -> y, y -> -x.
+    const float3x3 rz{{0.f, -1.f, 0.f}, {1.f, 0.f, 0.f}, {0.f, 0.f, 1.f}};
+    EXPECT_TRUE(near(toFloat3x3(quaternion{0.f, 0.f, s, s}), rz, 1e-4f));
+    // Consistency with toFloat4x4: identical upper-left 3x3 block.
+    const quaternion q = angleAxis(radians(37.f), normalize(float3{1.f, 2.f, -1.f}));
+    EXPECT_TRUE(near(toFloat3x3(q), toFloat3x3(toFloat4x4(q))));
+}
+
+TEST(Quaternion, ToQuaternionRoundTripAllBranches) {
+    // Round trip toFloat3x3(toQuaternion(m)) ~= m.  Identity and the 90-degree axis
+    // rotations have trace > 0 (w branch); the 180-degree rotations drive the trace
+    // negative and exercise the x / y / z diagonal branches.
+    const float3x3 rx90{{1.f, 0.f, 0.f}, {0.f, 0.f, -1.f}, {0.f, 1.f, 0.f}};
+    const float3x3 ry90{{0.f, 0.f, 1.f}, {0.f, 1.f, 0.f}, {-1.f, 0.f, 0.f}};
+    const float3x3 rz90{{0.f, -1.f, 0.f}, {1.f, 0.f, 0.f}, {0.f, 0.f, 1.f}};
+    const float3x3 rx180{{1.f, 0.f, 0.f}, {0.f, -1.f, 0.f}, {0.f, 0.f, -1.f}};
+    const float3x3 ry180{{-1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, -1.f}};
+    const float3x3 rz180{{-1.f, 0.f, 0.f}, {0.f, -1.f, 0.f}, {0.f, 0.f, 1.f}};
+    const float3x3 rotations[] = {float3x3{1.f}, rx90, ry90, rz90, rx180, ry180, rz180};
+    for (const float3x3& m : rotations)
+        EXPECT_TRUE(near(toFloat3x3(toQuaternion(m)), m, 1e-4f));
+    // A combined rotation built as a product of axis rotations round trips too.
+    const float3x3 combined = rx90 * ry90 * rz180;
+    EXPECT_TRUE(near(toFloat3x3(toQuaternion(combined)), combined, 1e-4f));
+}
+
+TEST(Quaternion, ToQuaternionKnownValue) {
+    // 40 degrees about a normalized (1, 2, 3) axis: w = cos(20 deg) > 0.5, so
+    // Shepperd's w branch recovers the exact quaternion (same sign).
+    const quaternion q = angleAxis(radians(40.f), normalize(float3{1.f, 2.f, 3.f}));
+    const quaternion back = toQuaternion(toFloat3x3(q));
+    EXPECT_TRUE(near(float4{back.x, back.y, back.z, back.w}, float4{q.x, q.y, q.z, q.w}, 1e-4f));
+    // The recovered quaternion is unit.
+    EXPECT_NEAR(dot(back, back), 1.f, 1e-5f);
+}

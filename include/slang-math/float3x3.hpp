@@ -47,5 +47,15 @@ struct float3x3 {
     [[nodiscard]] constexpr bool operator==(const float3x3&) const noexcept = default;
 };
 
+/// `v * M` — row-vector form: `result[j] = Σ_i v[i] * M[i][j]`.  Slang: `mul(v, M)`.
+/// Identity: `v * M == transpose(M) * v`.
+[[nodiscard]] inline constexpr float3 operator*(const float3& v, const float3x3& m) noexcept {
+    return {
+        v.x * m[0][0] + v.y * m[1][0] + v.z * m[2][0],
+        v.x * m[0][1] + v.y * m[1][1] + v.z * m[2][1],
+        v.x * m[0][2] + v.y * m[1][2] + v.z * m[2][2],
+    };
+}
+
 } // namespace sm
 #endif // SLANG_MATH_FLOAT3X3_HPP

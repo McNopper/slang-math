@@ -43,5 +43,14 @@ struct float2x2 {
     [[nodiscard]] constexpr bool operator==(const float2x2&) const noexcept = default;
 };
 
+/// `v * M` — row-vector form: `result[j] = Σ_i v[i] * M[i][j]`.  Slang: `mul(v, M)`.
+/// Identity: `v * M == transpose(M) * v`.
+[[nodiscard]] inline constexpr float2 operator*(const float2& v, const float2x2& m) noexcept {
+    return {
+        v.x * m[0][0] + v.y * m[1][0],
+        v.x * m[0][1] + v.y * m[1][1],
+    };
+}
+
 } // namespace sm
 #endif // SLANG_MATH_FLOAT2X2_HPP

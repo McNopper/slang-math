@@ -528,6 +528,17 @@ template <square_mat M> [[nodiscard]] inline constexpr M operator*(const M& a, c
     };
 }
 
+/// 4×4 matrix determinant — cofactor expansion along the first row, in terms of
+/// the existing 3×3 determinants of the row-0 minors.
+[[nodiscard]] inline constexpr float determinant(const float4x4& m) noexcept {
+    const float3x3 minor0{{m[1][1], m[1][2], m[1][3]}, {m[2][1], m[2][2], m[2][3]}, {m[3][1], m[3][2], m[3][3]}};
+    const float3x3 minor1{{m[1][0], m[1][2], m[1][3]}, {m[2][0], m[2][2], m[2][3]}, {m[3][0], m[3][2], m[3][3]}};
+    const float3x3 minor2{{m[1][0], m[1][1], m[1][3]}, {m[2][0], m[2][1], m[2][3]}, {m[3][0], m[3][1], m[3][3]}};
+    const float3x3 minor3{{m[1][0], m[1][1], m[1][2]}, {m[2][0], m[2][1], m[2][2]}, {m[3][0], m[3][1], m[3][2]}};
+    return m[0][0] * determinant(minor0) - m[0][1] * determinant(minor1) + m[0][2] * determinant(minor2) -
+           m[0][3] * determinant(minor3);
+}
+
 namespace detail {
 
 inline constexpr std::int32_t matrixCols = 4;                 ///< float4x4 dimension

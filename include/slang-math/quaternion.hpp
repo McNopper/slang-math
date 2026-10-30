@@ -4,6 +4,7 @@
 #include <cmath>
 
 #include "float3.hpp"
+#include "float3x3.hpp"
 #include "float4x4.hpp"
 
 namespace sm {
@@ -49,6 +50,68 @@ struct quaternion {
         {2.f * (xy + wz), 1.f - 2.f * (x2 + z2), 2.f * (yz - wx), 0.f}, // row 1
         {2.f * (xz - wy), 2.f * (yz + wx), 1.f - 2.f * (x2 + y2), 0.f}, // row 2
         {0.f, 0.f, 0.f, 1.f},                                           // row 3
+    };
+}
+
+/// Convert a unit quaternion to a 3×3 row-major rotation matrix — the same
+/// rotation-matrix layout as `toFloat4x4` minus the fourth row/column.
+[[nodiscard]] inline constexpr float3x3 toFloat3x3(const quaternion& q) noexcept {
+    const float x2 = q.x * q.x, y2 = q.y * q.y, z2 = q.z * q.z;
+    const float xy = q.x * q.y, xz = q.x * q.z, yz = q.y * q.z;
+    const float wx = q.w * q.x, wy = q.w * q.y, wz = q.w * q.z;
+    // Rotation matrix rows (identical to toFloat4x4, rows 0-2):
+    return {
+        {1.f - 2.f * (y2 + z2), 2.f * (xy - wz), 2.f * (xz + wy)}, // row 0
+        {2.f * (xy + wz), 1.f - 2.f * (x2 + z2), 2.f * (yz - wx)}, // row 1
+        {2.f * (xz - wy), 2.f * (yz + wx), 1.f - 2.f * (x2 + y2)}, // row 2
+    };
+}
+
+/// Convert an orthonormal rotation matrix to its unit quaternion — Shepperd's
+/// method: the pivot branch is picked from the largest diagonal element
+/// (trace + 1 when the trace is positive, else 1 + the largest diagonal minus
+/// the other two), and the remaining components follow from the pivot axis so
+/// every branch divides by the largest available quantity.
+///
+/// Contract: `m` must be an **orthonormal rotation matrix** — shear, scale and
+/// reflection are not projected away; behavior is undefined for non-orthonormal
+/// input.  Rotation round trip: `toFloat3x3(toQuaternion(m)) == m`.
+[[nodiscard]] inline quaternion toQuaternion(const float3x3& m) noexcept {
+    const float trace = m[0][0] + m[1][1] + m[2][2];
+    if (trace > 0.f) {                                // w is the largest component: 4w² = trace + 1
+        const float s = std::sqrt(trace + 1.f) * 2.f; // 4w
+        return {
+            (m[2][1] - m[1][2]) / s, // x
+            (m[0][2] - m[2][0]) / s, // y
+            (m[1][0] - m[0][1]) / s, // z
+            0.25f * s,               // w
+        };
+    }
+    if (m[0][0] > m[1][1] && m[0][0] > m[2][2]) { // x is the largest component: 4x² = 1 + m00 - m11 - m22
+        const float s = std::sqrt(1.f + m[0][0] - m[1][1] - m[2][2]) * 2.f; // 4x
+        return {
+            0.25f * s,               // x
+            (m[0][1] + m[1][0]) / s, // y
+            (m[0][2] + m[2][0]) / s, // z
+            (m[2][1] - m[1][2]) / s, // w
+        };
+    }
+    if (m[1][1] > m[2][2]) { // y is the largest component: 4y² = 1 + m11 - m00 - m22
+        const float s = std::sqrt(1.f + m[1][1] - m[0][0] - m[2][2]) * 2.f; // 4y
+        return {
+            (m[0][1] + m[1][0]) / s, // x
+            0.25f * s,               // y
+            (m[1][2] + m[2][1]) / s, // z
+            (m[0][2] - m[2][0]) / s, // w
+        };
+    }
+    // z is the largest component: 4z² = 1 + m22 - m00 - m11
+    const float s = std::sqrt(1.f + m[2][2] - m[0][0] - m[1][1]) * 2.f; // 4z
+    return {
+        (m[0][2] + m[2][0]) / s, // x
+        (m[1][2] + m[2][1]) / s, // y
+        0.25f * s,               // z
+        (m[1][0] - m[0][1]) / s, // w
     };
 }
 

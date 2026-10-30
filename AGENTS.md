@@ -39,7 +39,9 @@ layout. `m[row][col]` indexing is identical to Slang. Upload `value_ptr(m)` / `&
   `toMatrix`, `lookAtRH`, `perspectiveRH_ZO`, `inverseLookAtRH`, `inversePerspectiveRH_ZO`, etc.
 - **Align to the Slang/HLSL intrinsic spelling** where one exists: `dot`, `cross`, `normalize`,
   `length`, `lerp`, `clamp`, `reflect`, `transpose`, `inverse`, `radians`/`degrees`.
-- **Casts use `toFloatNxN`:** `toFloat3x3(float4x4)`, `toFloat4x4(quaternion)`.
+- **Casts use `toFloatNxN`:** `toFloat3x3(float4x4)`, `toFloat4x4(quaternion)`,
+  `toFloat3x3(quaternion)`, `toQuaternion(float3x3)` (Shepperd — requires an orthonormal
+  rotation matrix).
 - **Quaternion is `(x, y, z, w)`; identity `{0,0,0,1}`** (matches Slang `float4`, NOT glm wxyz).
   Algebra: `dot`, `normalize`, `conjugate`, `operator*` (Hamilton, composes rotations), `slerp`.
 - **Single coordinate convention → no `RH`/`ZO` suffix.** Only right-handed + Vulkan zero-to-one
@@ -59,8 +61,9 @@ pipeline currently consumes. Ship the full set for every supported scalar:
   `tan`, `asin`, `acos`, `atan`, `atan2`, `log`, `pow` (vector and vector-exponent forms),
   `distance`, `reflect`, `faceforward`, `refract`, `floor`, `ceil`, `trunc`, `round`, `frac`,
   `fmod`, `rsqrt`, `fma`, `step`, `smoothstep`, `exp2`, `log2`, `log10`, `any_nan`, `any_inf`,
-  `all_finite`; `square_mat` (`float2x2/3x3/4x4`) carries `transpose` and
-  matrix×matrix `operator*`. No float3-only special cases — a new scalar's vectors inherit the
+  `all_finite`; `square_mat` (`float2x2/3x3/4x4`) carries `transpose` and matrix×matrix
+  `operator*` — plus the row-vector `v * M` `operator*` and `determinant` for all three sizes.
+  No float3-only special cases — a new scalar's vectors inherit the
   `vec` ops automatically.
 - **Scalar/vector availability follows C-library collisions** (verified against MSVC/UCRT):
   collision-free names ship **scalar + vector pairs** (`sign`, `frac`, `rsqrt`, `step`, plus
@@ -78,8 +81,10 @@ pipeline currently consumes. Ship the full set for every supported scalar:
   (`int2`, `int3`, `int4`) — never ship a scalar with a partial vector set
   (no `int2`+`int4` without `int3`).
 - Matrix `transpose` and matrix×matrix `operator*` are generic over `square_mat`
-  (`float2x2/3x3/4x4`); `inverse` stays size-specialized (closed-form 2×2, Cramer 3×3,
-  Gauss-Jordan 4×4) — do not collapse to a single generic inverse.
+  (`float2x2/3x3/4x4`); the row-vector `v * M` `operator*` ships per size next to each matrix
+  type. `determinant` (closed-form 2×2/3×3, cofactor expansion along the first row for 4×4)
+  and `inverse` (closed-form 2×2, Cramer 3×3, Gauss-Jordan 4×4) stay size-specialized — do
+  not collapse to a single generic inverse.
 
 ## Layout of the headers
 
