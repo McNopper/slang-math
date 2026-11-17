@@ -63,7 +63,7 @@ downstream evidence: shader `saturate` has 99 call sites vs ~40 hand-rolled
 and Harmonia's dead hand-rolled `Math::isNanOrInf` has been deleted (H-04); `cos`
 is the only trig function shipped, so
 downstream runs per-component `std::sin`/`std::cos`/`std::atan2` code
-(`Theia/src/theia/camera/CameraController.hpp`, Harmonia's `IblProbe.cpp`/`Light.cpp`);
+(`Theia/src/theia/camera/CameraController.hpp`, Harmonia's `Harmonia/src/harmonia/scene/IblProbe.cpp`/`Harmonia/src/harmonia/scene/Light.cpp`);
 `rsqrt` is hand-mirrored as `1/std::sqrt` in two spots (`Hyperion/tests/unit/test_bsdf.cpp:491`,
 `Harmonia/tests/unit/test_math.cpp:73`). Library comparison: glm-parity items are folded into
 SM3/SM4 (`determinant` 4×4, `toQuaternion`, `ortho`, `trs`); DirectXMath's SIMD focus is out
@@ -76,7 +76,7 @@ of scope by design (slang-math is header-only and constexpr-friendly).
 | SM3 (v0.3.0) | **Matrix/quaternion completeness** — `determinant(float4x4)` (cofactor expansion along the first row over the 3×3 minors; 2×2/3×3 exist), `v*M` row-vector ops for `float2x2`/`float3x3` (float4x4 already had it), `toFloat3x3(quaternion)` (symmetry with `toFloat4x4`), `toQuaternion(float3x3)` (Shepperd's method, largest-diagonal branch; requires an orthonormal rotation matrix — documented contract; TRS-decompose prerequisite for the family's animation track). 7 contract tests; 95/95 ctest. | — | **done (v0.8.0)** |
 | SM4 | **Transform builders** — `trs(t, q, s)` compose (the `Harmonia/src/harmonia/scene/Geometry.cpp:97` T·R·S pattern; feeds the node-hierarchy work NH2 in Harmonia/PLAN.md), `ortho` + `inverseOrtho` (RH ZO depth, symmetric with the `perspective`/`inversePerspective` pair). | — | **done (v0.5.0)** |
 | SM5 | **Docs + release per batch** — AGENTS.md `float_vec` enumeration + the scalar/vector collision rule refreshed with SM1; README tables track the shipped set. Batches release incrementally as minors: v0.5.0 (SM4), v0.6.0 (SM1), v0.7.0 planned (SM2). | per batch | **done (v0.6.0)** |
-| SM6 | **Downstream migration** (post-tag) — replace hand-rolled downstream code with the new functions (saturate sites, dead `Math::isNanOrInf`, duplicate `kPi` constants, `IblProbe` hand-rolled `Mat3` → `sm::float3x3`, `Geometry.cpp` TRS → `sm::trs`, test-mirror `rsqrt`/`saturate` cleanup). **Tracked in the downstream repos** — Aether/Harmonia/Hyperion/Theia each carry their slice in their own PLAN.md; this repo's part ends at tagging v0.3.0. **All four downstream slices closed 2026-11-15:** Aether (v0.7.8 `sm::saturate` + the TRS sites verified-empty), Harmonia (IblProbe Mat3 + its slice), Theia (saturate consumed, rsqrt/trig sites verified-empty), Hyperion (test-mirror `rsqrt`/`saturate`/`kPi` cleanup, 43/43). | SM5, v0.3.0 tag | **done** |
+| SM6 | **Downstream migration** (post-tag) — replace hand-rolled downstream code with the new functions (saturate sites, dead `Math::isNanOrInf`, duplicate `kPi` constants, `IblProbe` hand-rolled `Mat3` → `sm::float3x3`, `Harmonia/src/harmonia/scene/Geometry.cpp` TRS → `sm::trs`, test-mirror `rsqrt`/`saturate` cleanup). **Tracked in the downstream repos** — Aether/Harmonia/Hyperion/Theia each carry their slice in their own PLAN.md; this repo's part ends at tagging v0.3.0. **All four downstream slices closed 2026-11-15:** Aether (v0.7.8 `sm::saturate` + the TRS sites verified-empty), Harmonia (IblProbe Mat3 + its slice), Theia (saturate consumed, rsqrt/trig sites verified-empty), Hyperion (test-mirror `rsqrt`/`saturate`/`kPi` cleanup, 43/43). | SM5, v0.3.0 tag | **done** |
 
 The SM batches ship as **incremental minors** per the family release policy (v0.5.0 SM4,
 v0.6.0 SM1, v0.7.0 SM2 planned) — not hoarded into one release; SM6 is the downstream
@@ -137,7 +137,7 @@ never silence it). Every new function carries a round-trip or identity test (rep
   AGENTS documents the lane and the architecture-gate contract (vendored
   engine, orphan-free).
 
-- **v0.3.1**: **architecture gate.** `tools/check_layers.py` (ctest
+- **v0.3.1**: **architecture gate.** tools/check_layers.py (ctest
   `test_layers`, label `analysis`) — slang-math is a flat single-module header library, so
   the gate enforces the one architecture contract that applies: **no cyclic `#include`
   dependencies** (file-level SCC detection; partial/deferred cycles that merely compile

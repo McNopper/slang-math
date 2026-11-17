@@ -53,15 +53,15 @@ layout. `m[row][col]` indexing is identical to Slang. Upload `value_ptr(m)` / `&
 slang-math is a **complete, consistent, standalone** package — not just the subset the
 pipeline currently consumes. Ship the full set for every supported scalar:
 
-- float vectors: `float2/3/4` · integer vectors: `uint2/3/4` · square matrices: `float2x2/3x3/4x4`.
+- float vectors: `<float2/3/4>` · integer vectors: `<uint2/3/4>` · square matrices: `<float2x2/3x3/4x4>`.
 - **Free functions are generic over C++20 concepts** (`functions.hpp`): `vec` (any component
-  vector — `float2/3/4` AND `uint2/3/4`, element-agnostic) carries the type-agnostic ops
+  vector — `<float2/3/4>` AND `<uint2/3/4>`, element-agnostic) carries the type-agnostic ops
   `dot`, `min`, `max`, `clamp`, `value_ptr`; `float_vec` (refines `vec`, `value_type == float`)
   carries the real-valued ops `length`, `normalize`, `lerp`, `abs`, `sqrt`, `exp`, `cos`, `sin`,
   `tan`, `asin`, `acos`, `atan`, `atan2`, `log`, `pow` (vector and vector-exponent forms),
   `distance`, `reflect`, `faceforward`, `refract`, `floor`, `ceil`, `trunc`, `round`, `frac`,
   `fmod`, `rsqrt`, `fma`, `step`, `smoothstep`, `exp2`, `log2`, `log10`, `any_nan`, `any_inf`,
-  `all_finite`; `square_mat` (`float2x2/3x3/4x4`) carries `transpose` and matrix×matrix
+  `all_finite`; `square_mat` (`<float2x2/3x3/4x4>`) carries `transpose` and matrix×matrix
   `operator*` — plus the row-vector `v * M` `operator*` and `determinant` for all three sizes.
   No float3-only special cases — a new scalar's vectors inherit the
   `vec` ops automatically.
@@ -81,14 +81,14 @@ pipeline currently consumes. Ship the full set for every supported scalar:
   (`int2`, `int3`, `int4`) — never ship a scalar with a partial vector set
   (no `int2`+`int4` without `int3`).
 - Matrix `transpose` and matrix×matrix `operator*` are generic over `square_mat`
-  (`float2x2/3x3/4x4`); the row-vector `v * M` `operator*` ships per size next to each matrix
+  (`<float2x2/3x3/4x4>`); the row-vector `v * M` `operator*` ships per size next to each matrix
   type. `determinant` (closed-form 2×2/3×3, cofactor expansion along the first row for 4×4)
   and `inverse` (closed-form 2×2, Cramer 3×3, Gauss-Jordan 4×4) stay size-specialized — do
   not collapse to a single generic inverse.
 
 ## Layout of the headers
 
-`include/slang-math/`: `float2/3/4.hpp`, `uint2/3/4.hpp`, `float2x2.hpp`, `float3x3.hpp`,
+`include/slang-math/`: `float2.hpp`, `float3.hpp`, `float4.hpp`, `uint2.hpp`, `uint3.hpp`, `uint4.hpp`, `float2x2.hpp`, `float3x3.hpp`,
 `float4x4.hpp`, `quaternion.hpp`, `functions.hpp` (free functions), `transform.hpp`
 (camera/projection builders), `slang-math.hpp` (umbrella). Add à-la-carte includes to the
 umbrella when introducing a new header.
@@ -134,7 +134,7 @@ when the LLVM tools are missing). Wired into CI as a report-only `coverage (Q1)`
 
 **
 
-**Dead-code gate:** `python tools/check_dead.py` - orphan headers, never-compiled sources (absent from `compile_commands.json` AND unreferenced by any CMake file), and FetchContent declare/consume mismatches. Also registered as ctest `test_dead` (label `analysis`; local only - registration is gated on the per-user check-dead skill install, so CI runners skip it). Justified findings go into `tools/check_dead.exceptions` with a reason; real dead code is deleted in a fix commit.
+**Dead-code gate:** `python tools/check_dead.py` - orphan headers, never-compiled sources (absent from `build/compile_commands.json` AND unreferenced by any CMake file), and FetchContent declare/consume mismatches. Also registered as ctest `test_dead` (label `analysis`; local only - registration is gated on the per-user check-dead skill install, so CI runners skip it). Justified findings go into `tools/check_dead.exceptions` with a reason; real dead code is deleted in a fix commit.
 
 Sanitizer lane (Clang/GCC configures only):** `-DSLANGMATH_SANITIZER=address|undefined|thread`. Host-side FP is deterministic
 (`/fp:strict` / `-ffp-contract=off -fno-fast-math`).
