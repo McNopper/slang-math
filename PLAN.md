@@ -29,6 +29,7 @@ in the sibling clones.
 
 ## At a glance
 
+- **Release:** v0.10.0 (2026-11-20) - family version alignment: SM6 four-slice closure (all downstream slices done) + docs alignment (type-group tokens, real header names, sibling paths) + check-dead engines 1.1.1/1.1.2 since v0.8.0; project version 0.10.0, consumed at v0.10.0 by aether/harmonia/theia/hyperion.
 - **Release:** v0.8.0 (tag-synced with GitHub) - SM3 matrix/quaternion completeness
   (`determinant(float4x4)`, `v*M` row-vector ops for `float2x2`/`float3x3`,
   `toFloat3x3(quaternion)`, `toQuaternion(float3x3)` Shepperd; 95/95 ctest).
