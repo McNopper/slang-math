@@ -255,12 +255,12 @@ template <float_vec V> [[nodiscard]] inline V atan2(const V& b, const V& a) noex
 
 /// Sign: -1 if x < 0, +1 if x > 0, 0 if x == 0 (NaN yields 0).
 [[nodiscard]] inline float sign(float x) noexcept {
-    return (x > 0.f) - (x < 0.f);
+    return static_cast<float>((x > 0.f) - (x < 0.f));
 }
 template <float_vec V> [[nodiscard]] inline V sign(const V& v) noexcept {
     V r{};
     for (std::int32_t i = 0; i < V::size; ++i)
-        r[i] = (v[i] > 0.f) - (v[i] < 0.f);
+        r[i] = static_cast<float>((v[i] > 0.f) - (v[i] < 0.f));
     return r;
 }
 
