@@ -21,7 +21,7 @@ flowchart LR
     H --> T["Theia<br/>real-time · games-grade"]
 ```
 
-The family's goal is OpenPBR 1.1.1 as the single material standard, with Theia converging to
+The family's goal is OpenPBR 1.1.2 as the single material standard, with Theia converging to
 Hyperion's unbiased ground truth. slang-math's part: a complete, consistent, standalone
 math package with Slang/HLSL naming parity (see `AGENTS.md` for the enforced policies).
 Sibling plans: `Aether/PLAN.md`, `Harmonia/PLAN.md`, `Hyperion/PLAN.md`, `Theia/PLAN.md`
@@ -29,6 +29,7 @@ in the sibling clones.
 
 ## At a glance
 
+- **Minor release:** v0.11.0 (2026-11-23) - documentation and roadmap aligned with the shipped OpenPBR 1.1.2 family baseline; explicit float conversion in `sign()` and the verified code-quality fixes carried forward from `b5ddf18`; project version 0.11.0. No open implementation roadmap item.
 - **Release:** v0.10.0 (2026-11-20) - family version alignment: SM6 four-slice closure (all downstream slices done) + docs alignment (type-group tokens, real header names, sibling paths) + check-dead engines 1.1.1/1.1.2 since v0.8.0; project version 0.10.0, consumed at v0.10.0 by aether/harmonia/theia/hyperion.
   - **Release verification (2026-11-23):** `verify-full` exit 0 after the explicit float conversion in `sign()` (`b5ddf18`).
 - **Release:** v0.8.0 (tag-synced with GitHub) - SM3 matrix/quaternion completeness
