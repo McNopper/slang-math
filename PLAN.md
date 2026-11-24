@@ -29,6 +29,7 @@ in the sibling clones.
 
 ## At a glance
 
+- **Minor release:** v0.12.0 (2026-11-24) - family version alignment for the shared camera-assembly release; no slang-math source changes. Project version 0.12.0.
 - **Minor release:** v0.11.0 (2026-11-23) - documentation and roadmap aligned with the shipped OpenPBR 1.1.2 family baseline; explicit float conversion in `sign()` and the verified code-quality fixes carried forward from `b5ddf18`; project version 0.11.0. No open implementation roadmap item.
 - **Release:** v0.10.0 (2026-11-20) - family version alignment: SM6 four-slice closure (all downstream slices done) + docs alignment (type-group tokens, real header names, sibling paths) + check-dead engines 1.1.1/1.1.2 since v0.8.0; project version 0.10.0, consumed at v0.10.0 by aether/harmonia/theia/hyperion.
   - **Release verification (2026-11-23):** `verify-full` exit 0 after the explicit float conversion in `sign()` (`b5ddf18`).
